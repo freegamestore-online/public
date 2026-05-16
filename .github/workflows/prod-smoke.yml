@@ -1,0 +1,52 @@
+name: Prod smoke
+
+# Runs every 30 minutes + on demand. Hits live endpoints to verify
+# core FGS services are up and responding.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Store site
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://freegamestore.online)
+          echo "freegamestore.online → $STATUS"
+          [ "$STATUS" = "200" ] || exit 1
+
+      - name: Auth service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://auth.freegamestore.online/me)
+          echo "auth.freegamestore.online/me → $STATUS (401 expected for unauthenticated)"
+          [ "$STATUS" = "401" ] || [ "$STATUS" = "200" ] || exit 1
+
+      - name: Leaderboard API
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://freegamestore-leaderboard.serge-the-dev.workers.dev/scores/tetris?sort=top)
+          echo "leaderboard/scores/tetris → $STATUS"
+          [ "$STATUS" = "200" ] || exit 1
+
+      - name: Sample games (spot check 5)
+        run: |
+          for game in tetris chess snake pong wordle; do
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' "https://${game}.freegamestore.online")
+            echo "${game}.freegamestore.online → $STATUS"
+            [ "$STATUS" = "200" ] || exit 1
+          done
+
+      - name: Agent service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://agent.freegamestore.online)
+          echo "agent.freegamestore.online → $STATUS"
+          # Agent may return 404 on root but should not 5xx
+          [ "$STATUS" -lt "500" ] || exit 1
+
+      - name: Publisher
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://publish.freegamestore.online)
+          echo "publish.freegamestore.online → $STATUS"
+          [ "$STATUS" = "200" ] || exit 1
