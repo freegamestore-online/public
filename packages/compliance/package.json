@@ -1,27 +1,32 @@
 {
-  "name": "@freegamestore/cli",
-  "version": "0.1.4",
-  "description": "fgs \u2014 CLI for publishing free games to freegamestore.online",
+  "name": "@freegamestore/compliance",
+  "version": "0.1.0",
+  "description": "Compliance checks for games published on freegamestore.online — used by the CLI for local feedback and by CI for gating.",
   "license": "MIT",
   "type": "module",
-  "bin": {
-    "fgs": "./dist/index.js"
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "homepage": "https://github.com/freegamestore-online/platform#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/freegamestore-online/platform.git",
-    "directory": "packages/fgs-cli"
+    "directory": "packages/compliance"
   },
   "bugs": {
     "url": "https://github.com/freegamestore-online/platform/issues"
   },
   "keywords": [
     "freegamestore",
-    "cli",
-    "scaffold",
-    "publish",
-    "cloudflare-pages"
+    "compliance",
+    "lint",
+    "audit",
+    "ci"
   ],
   "files": [
     "dist",
@@ -32,17 +37,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "dev": "tsc --watch"
-  },
-  "dependencies": {
-    "@freegamestore/compliance": "workspace:*",
-    "commander": "^12.1.0",
-    "prompts": "^2.4.2"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@types/prompts": "^2.4.9",
     "typescript": "^5.7.0"
-  }
+  },
+  "sideEffects": false
 }

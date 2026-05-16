@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { runChecks, type CheckResult } from '@freeappstore/compliance';
+import { runChecks, type CheckResult } from '@freegamestore/compliance';
 
 const isTTY = Boolean(process.stdout.isTTY) && process.env['NO_COLOR'] !== '1';
 const c = (open: string) => (s: string) => (isTTY ? `\x1b[${open}m${s}\x1b[39m` : s);

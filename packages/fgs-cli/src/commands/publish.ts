@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import prompts from 'prompts';
-import { runChecks } from '@freeappstore/compliance';
+import { runChecks } from '@freegamestore/compliance';
 import { openUrl } from '../lib/open.js';
 import { assertValidAppId } from '../lib/app-id.js';
 import { readConfig } from '../lib/config.js';
