@@ -16,10 +16,28 @@ export interface GameButtonProps {
   block?: boolean;
 }
 
-const SIZE: Record<GameButtonSize, { minHeight: string; padding: string; fontSize: string; borderRadius: string }> = {
-  sm: { minHeight: '2.75rem', padding: '0.5rem 1rem', fontSize: '0.85rem', borderRadius: '0.625rem' },
-  md: { minHeight: '3rem', padding: '0.625rem 1.25rem', fontSize: '0.9rem', borderRadius: '0.75rem' },
-  lg: { minHeight: '3.5rem', padding: '0.75rem 1.75rem', fontSize: '1rem', borderRadius: '0.875rem' },
+const SIZE: Record<
+  GameButtonSize,
+  { minHeight: string; padding: string; fontSize: string; borderRadius: string }
+> = {
+  sm: {
+    minHeight: '2.75rem',
+    padding: '0.5rem 1rem',
+    fontSize: '0.85rem',
+    borderRadius: '0.625rem',
+  },
+  md: {
+    minHeight: '3rem',
+    padding: '0.625rem 1.25rem',
+    fontSize: '0.9rem',
+    borderRadius: '0.75rem',
+  },
+  lg: {
+    minHeight: '3.5rem',
+    padding: '0.75rem 1.75rem',
+    fontSize: '1rem',
+    borderRadius: '0.875rem',
+  },
 };
 
 /**

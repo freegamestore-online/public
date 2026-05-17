@@ -1,6 +1,6 @@
-import { createContext, useState, useContext, useCallback } from 'react';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 
 interface SoundState {
   muted: boolean;
@@ -12,11 +12,7 @@ const SoundContext = createContext<SoundState>({ muted: true, toggle: () => {} }
 export function SoundProvider({ children }: { children: ReactNode }): React.JSX.Element {
   const [muted, setMuted] = useState(true);
   const toggle = useCallback(() => setMuted((m) => !m), []);
-  return (
-    <SoundContext.Provider value={{ muted, toggle }}>
-      {children}
-    </SoundContext.Provider>
-  );
+  return <SoundContext.Provider value={{ muted, toggle }}>{children}</SoundContext.Provider>;
 }
 
 /**

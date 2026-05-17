@@ -1,6 +1,6 @@
 import type * as React from 'react';
-import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { useSound } from './SoundContext.js';
 
 export interface GameTopbarStat {
@@ -70,7 +70,16 @@ export interface GameTopbarProps {
  *
  * Use inside <GameShell topbar={<GameTopbar … />}>.
  */
-export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, paused, onRestart }: GameTopbarProps): React.JSX.Element {
+export function GameTopbar({
+  title,
+  score,
+  stats,
+  actions,
+  rules,
+  onPlayPause,
+  paused,
+  onRestart,
+}: GameTopbarProps): React.JSX.Element {
   const [showRules, setShowRules] = useState(false);
   const sound = useSound();
 
@@ -115,7 +124,16 @@ export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, p
             }}
             aria-label="Browse all games"
           >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M2 6l6-4 6 4v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6z" />
               <path d="M6 14V9h4v5" />
             </svg>
@@ -139,7 +157,16 @@ export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, p
               }}
               aria-label="Game rules"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="8" cy="8" r="6.5" />
                 <path d="M8 11.5v0M8 5v4" />
               </svg>
@@ -215,7 +242,16 @@ export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, p
               }}
               aria-label="Restart"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M2 8a6 6 0 0111.5-2.5" />
                 <path d="M14 8a6 6 0 01-11.5 2.5" />
                 <path d="M14 2v3.5h-3.5" />
@@ -242,12 +278,30 @@ export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, p
             aria-label={sound.muted ? 'Unmute' : 'Mute'}
           >
             {sound.muted ? (
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M8 2L4 5.5H1.5v5H4L8 14V2z" />
                 <path d="M12 5.5l4 5M16 5.5l-4 5" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M8 2L4 5.5H1.5v5H4L8 14V2z" />
                 <path d="M11.5 5a4.5 4.5 0 010 6" />
                 <path d="M13.5 3a7.5 7.5 0 010 10" />
@@ -267,7 +321,13 @@ export function GameTopbar({ title, score, stats, actions, rules, onPlayPause, p
   );
 }
 
-function RulesOverlay({ children, onClose }: { children: ReactNode; onClose: () => void }): React.JSX.Element {
+function RulesOverlay({
+  children,
+  onClose,
+}: {
+  children: ReactNode;
+  onClose: () => void;
+}): React.JSX.Element {
   return (
     <div
       style={{

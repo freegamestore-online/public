@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const API_BASE = 'https://freegamestore-leaderboard.serge-the-dev.workers.dev';
 

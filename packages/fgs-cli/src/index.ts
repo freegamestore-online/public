@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Command } from 'commander';
+import { checkCommand } from './commands/check.js';
+import { doctorCommand } from './commands/doctor.js';
+import { initCommand } from './commands/init.js';
+import { listCommand } from './commands/list.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
-import { initCommand } from './commands/init.js';
-import { publishCommand } from './commands/publish.js';
 import { logsCommand } from './commands/logs.js';
-import { whoamiCommand } from './commands/whoami.js';
-import { doctorCommand } from './commands/doctor.js';
-import { checkCommand } from './commands/check.js';
+import { publishCommand } from './commands/publish.js';
 import { screencheckCommand } from './commands/screencheck.js';
-import { listCommand } from './commands/list.js';
+import { whoamiCommand } from './commands/whoami.js';
 
 // Read version from the package's own package.json so `fgs --version` always
 // matches the installed package.

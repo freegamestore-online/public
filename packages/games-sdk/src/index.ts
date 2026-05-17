@@ -13,24 +13,24 @@
  *   <GameShell topbar={<GameTopbar score={42} />}>{your game}</GameShell>
  */
 
+export { GameAuth } from './GameAuth.js';
+export {
+  GameButton,
+  type GameButtonProps,
+  type GameButtonSize,
+  type GameButtonVariant,
+} from './GameButton.js';
 export { GameShell, type GameShellProps } from './GameShell.js';
 export {
   GameTopbar,
   type GameTopbarProps,
   type GameTopbarStat,
 } from './GameTopbar.js';
-export {
-  GameButton,
-  type GameButtonProps,
-  type GameButtonVariant,
-  type GameButtonSize,
-} from './GameButton.js';
-export { GameAuth } from './GameAuth.js';
-export { useAuth, type User } from './useAuth.js';
-export {
-  useLeaderboard,
-  type LeaderboardEntry,
-} from './useLeaderboard.js';
 export { Leaderboard, type LeaderboardProps } from './Leaderboard.js';
 export { useSound } from './SoundContext.js';
+export { type User, useAuth } from './useAuth.js';
 export { useGameSounds } from './useGameSounds.js';
+export {
+  type LeaderboardEntry,
+  useLeaderboard,
+} from './useLeaderboard.js';

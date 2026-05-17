@@ -273,12 +273,12 @@ function sub(el,cat){
   el.classList.add('active');
   document.querySelectorAll('.sp').forEach(s=>{s.classList.toggle('active',s.dataset.sub===id)});
 }
-document.addEventListener('click',function(ev){
+document.addEventListener('click',(ev)=> {
   const btn=ev.target.closest('.cp-btn');
   if(!btn)return;
   const text=btn.dataset.prompt||'';
   try{navigator.clipboard.writeText(text)}catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta)}
-  btn.textContent='\u2713';setTimeout(function(){btn.textContent='\ud83d\udccb'},1000);
+  btn.textContent='\u2713';setTimeout(()=> {btn.textContent='\ud83d\udccb'},1000);
 });
 </script>
 </body></html>

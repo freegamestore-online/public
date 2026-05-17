@@ -320,9 +320,7 @@
         "premium": true,
         "comingSoon": true,
         "reason": "LLM-powered analysis — coming soon",
-        "docFiles": [
-          "README.md"
-        ],
+        "docFiles": ["README.md"],
         "hasJSDoc": false,
         "description": "Detects contradictions between documentation and code. Finds stale README claims, incorrect JSDoc, outdated API docs, and misleading comments."
       },

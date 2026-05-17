@@ -25,20 +25,23 @@ export function useGameSounds() {
     return ctxRef.current;
   }, [muted]);
 
-  const tone = useCallback((freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) => {
-    const ctx = getCtx();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(volume, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration);
-  }, [getCtx]);
+  const tone = useCallback(
+    (freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) => {
+      const ctx = getCtx();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration);
+    },
+    [getCtx],
+  );
 
   /** Short click/tap — piece moved, card flipped, button pressed */
   const playMove = useCallback(() => {

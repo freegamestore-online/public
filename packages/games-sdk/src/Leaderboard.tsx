@@ -7,7 +7,11 @@ export interface LeaderboardProps {
   loading: boolean;
 }
 
-export function Leaderboard({ topScores, recentScores, loading }: LeaderboardProps): React.JSX.Element {
+export function Leaderboard({
+  topScores,
+  recentScores,
+  loading,
+}: LeaderboardProps): React.JSX.Element {
   const [tab, setTab] = useState<'top' | 'recent'>('top');
   const scores = tab === 'top' ? topScores : recentScores;
 
