@@ -8,6 +8,8 @@ on:
     - cron: '*/30 * * * *'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
