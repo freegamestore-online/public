@@ -16,11 +16,19 @@ const FORBIDDEN = [
 
 const SCAN_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.json']);
 
+// Per-game compliance tests legitimately mention these tracker names as
+// the banned list they assert NOT to find. Treating those as positives
+// is the classic "check finds its own assertion" false positive.
+function isSelfReferenceTestFile(path: string): boolean {
+  return /(?:^|\/)(?:test|tests|__tests__)\//.test(path) && /compliance\.test\.[jt]sx?$/.test(path);
+}
+
 export async function checkNoTracking(source: FileSource): Promise<CheckResult> {
   const hits: { file: string; matches: string[] }[] = [];
 
   for await (const path of source.list()) {
     if (!SCAN_EXTS.has(extOf(path))) continue;
+    if (isSelfReferenceTestFile(path)) continue;
     const content = await source.read(path);
     if (!content) continue;
     const matches = FORBIDDEN.filter((sdk) => content.includes(sdk));
