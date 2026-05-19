@@ -103,7 +103,13 @@ export function GameTopbar({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 }}>
-          {/* Home — back to store listing */}
+          {/* Catalog — back to store listing.
+              2×2 grid icon, not a house. A house icon clashed with the
+              browser's own "home" button on Android Chrome (two visually
+              identical home icons one above the other was confusing —
+              users couldn't tell which one belonged to the page). A
+              grid reads as "all games / browse the catalog" and is
+              visually distinct from anything browser chrome ships. */}
           <a
             href="https://freegamestore.online"
             target="_blank"
@@ -134,8 +140,10 @@ export function GameTopbar({
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M2 6l6-4 6 4v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6z" />
-              <path d="M6 14V9h4v5" />
+              <rect x="2" y="2" width="5" height="5" rx="1" />
+              <rect x="9" y="2" width="5" height="5" rx="1" />
+              <rect x="2" y="9" width="5" height="5" rx="1" />
+              <rect x="9" y="9" width="5" height="5" rx="1" />
             </svg>
           </a>
           {rules !== undefined && (
