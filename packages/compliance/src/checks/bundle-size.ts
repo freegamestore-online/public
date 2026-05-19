@@ -3,12 +3,13 @@ import { gzipByteLength } from '../lib/gzip.js';
 import type { CheckResult } from '../types.js';
 
 const MAX_GZIP_BYTES_DEFAULT = 300 * 1024; // 300 KB for 2D / DOM games
-const MAX_GZIP_BYTES_3D = 600 * 1024; // 600 KB for games shipping a 3D engine
+const MAX_GZIP_BYTES_3D = 600 * 1024; // 600 KB for games shipping a heavy engine
 
-// Heavy 3D engines that justify a larger budget. If any of these are a
-// runtime dependency, the limit is raised — a Babylon-based bowling game
-// can't realistically fit under 300KB and shouldn't have to.
-const HEAVY_3D_DEPS = ['@babylonjs/core', 'three', '@react-three/fiber'];
+// Engines that justify a larger budget. If any of these are a runtime
+// dependency, the limit is raised — a Babylon-based bowling game or a
+// Phaser-based shoot-em-up can't realistically fit under 300KB and
+// shouldn't have to.
+const HEAVY_3D_DEPS = ['@babylonjs/core', 'three', '@react-three/fiber', 'phaser'];
 
 const ASSETS_DIR = 'web/dist/assets';
 const PACKAGE_JSON = 'web/package.json';
