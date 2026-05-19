@@ -1,4 +1,5 @@
 import type { FileSource } from '../lib/file-source.js';
+import { stripForExt } from '../lib/strip.js';
 import type { CheckResult } from '../types.js';
 
 /**
@@ -29,9 +30,14 @@ export async function checkAudioMuteRespect(source: FileSource): Promise<CheckRe
   let sdkAware = false;
 
   for await (const path of source.list()) {
-    if (!SCAN_EXTS.has(extOf(path))) continue;
-    const content = await source.read(path);
-    if (!content) continue;
+    const ext = extOf(path);
+    if (!SCAN_EXTS.has(ext)) continue;
+    const raw = await source.read(path);
+    if (!raw) continue;
+    // Strip comments + string contents so a `// example: new Audio()`
+    // doc note doesn't fire, and a `const example = "useGameSounds"`
+    // string doesn't falsely satisfy the SDK marker.
+    const content = stripForExt(raw, ext);
     if (RAW_AUDIO_RE.test(content)) rawAudioFiles.push(path);
     if (SDK_MUTE_RE.test(content)) sdkAware = true;
   }

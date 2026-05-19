@@ -1,4 +1,5 @@
 import type { FileSource } from '../lib/file-source.js';
+import { stripCommentsOnly, stripCssComments } from '../lib/strip.js';
 import type { CheckResult } from '../types.js';
 
 /**
@@ -25,8 +26,17 @@ export async function checkNoBrandOverrides(source: FileSource): Promise<CheckRe
   for await (const path of source.list()) {
     const ext = extOf(path);
     if (!SCANNED_EXTS.has(ext)) continue;
-    const content = await source.read(path);
-    if (!content) continue;
+    const raw = await source.read(path);
+    if (!raw) continue;
+    // Strip comment bodies so a `// font-family: "Comic Sans"` note
+    // doesn't fire. Preserve string-literal contents — the JSX value
+    // `fontFamily: "Comic Sans"` IS a string literal and is the thing
+    // we're auditing. For .css/.scss use the css-only stripper (no `//`
+    // syntax at the language level).
+    const content =
+      ext === '.css' || ext === '.scss'
+        ? stripCssComments(raw)
+        : stripCommentsOnly(raw);
     // Canonical theme file: the platform's CSS variables ARE defined here.
     // Apps own this file post-scaffold (they can technically modify token
     // values, and we accept the imperfection — the loud places where a

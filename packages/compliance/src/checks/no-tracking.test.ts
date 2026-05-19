@@ -136,4 +136,33 @@ describe('checkNoTracking', () => {
     expect(r.status).toBe('fail');
     expect(r.detail).toMatch(/gtag/);
   });
+
+  // --- comment-stripping regression guards ---
+
+  it('ignores tracker names that only appear in a // line comment', async () => {
+    await writeFile(
+      join(dir, 'web', 'App.tsx'),
+      '// We do NOT use google-analytics. See platform policy.\nexport {};',
+    );
+    const r = await checkNoTracking(fsFileSource(dir));
+    expect(r.status).toBe('pass');
+  });
+
+  it('ignores tracker names inside a /** JSDoc */ block', async () => {
+    await writeFile(
+      join(dir, 'web', 'lib.ts'),
+      '/** Do not add @amplitude/analytics-browser here. */\nexport {};',
+    );
+    const r = await checkNoTracking(fsFileSource(dir));
+    expect(r.status).toBe('pass');
+  });
+
+  it('ignores tracker references inside <!-- HTML --> comments', async () => {
+    await writeFile(
+      join(dir, 'web', 'index.html'),
+      '<!-- This site does NOT load google-analytics or @amplitude/* -->\n<body></body>',
+    );
+    const r = await checkNoTracking(fsFileSource(dir));
+    expect(r.status).toBe('pass');
+  });
 });

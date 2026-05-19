@@ -1,5 +1,6 @@
 import type { FileSource } from '../lib/file-source.js';
 import { isGameProject } from '../lib/project-type.js';
+import { stripCommentsAndStrings, stripHtmlComments } from '../lib/strip.js';
 import type { CheckResult } from '../types.js';
 
 const VITE_CONFIG = 'web/vite.config.ts';
@@ -256,92 +257,6 @@ function parseBundleCap(workbox: string): number | null {
   const parts = expr.split('*').map((s) => Number(s.trim()));
   if (parts.some((n) => !Number.isFinite(n) || n < 0)) return null;
   return parts.reduce((a, b) => a * b, 1);
-}
-
-/**
- * Replace every `<!-- ... -->` comment body with spaces (preserving
- * positions). Used before HTML regex matches so that commented-out
- * tags don't false-positive — `<!-- <link rel="manifest"> -->` is not
- * a live install claim.
- *
- * HTML comments don't nest in real-world docs; first `-->` ends the
- * comment. Doesn't try to handle CDATA or downlevel-revealed comments.
- */
-function stripHtmlComments(src: string): string {
-  const out = src.split('');
-  let i = 0;
-  while (i < src.length) {
-    if (
-      src[i] === '<' &&
-      src[i + 1] === '!' &&
-      src[i + 2] === '-' &&
-      src[i + 3] === '-'
-    ) {
-      const start = i;
-      i += 4;
-      while (
-        i < src.length &&
-        !(src[i] === '-' && src[i + 1] === '-' && src[i + 2] === '>')
-      )
-        i++;
-      i = Math.min(src.length, i + 3);
-      for (let k = start; k < i; k++) if (out[k] !== '\n') out[k] = ' ';
-      continue;
-    }
-    i++;
-  }
-  return out.join('');
-}
-
-/**
- * Returns a "code-only" version of `src` where every comment body and
- * string-literal content is replaced with spaces of equal length. This
- * lets us run cheap regex matches against the source while ignoring
- * text that isn't real code, without disturbing source positions —
- * regex `.index` results are still valid offsets into the original.
- *
- * Handles: line comments (`//`), block comments (`/* *\/`), single,
- * double, and backtick strings (with `\` escapes). Doesn't try to
- * track template-literal `${...}` expressions or recognise regex
- * literals — both edge cases would need a real tokenizer.
- */
-function stripCommentsAndStrings(src: string): string {
-  const out = src.split('');
-  let i = 0;
-  const blank = (from: number, to: number) => {
-    for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
-  };
-  while (i < src.length) {
-    const c = src[i];
-    if (c === '/' && src[i + 1] === '/') {
-      const start = i;
-      while (i < src.length && src[i] !== '\n') i++;
-      blank(start, i);
-      continue;
-    }
-    if (c === '/' && src[i + 1] === '*') {
-      const start = i;
-      i += 2;
-      while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++;
-      i = Math.min(src.length, i + 2);
-      blank(start, i);
-      continue;
-    }
-    if (c === '"' || c === "'" || c === '`') {
-      const quote = c;
-      const start = i + 1; // keep the opening quote in place
-      i++;
-      while (i < src.length && src[i] !== quote) {
-        if (src[i] === '\\' && i + 1 < src.length) i++;
-        i++;
-      }
-      blank(start, i);
-      i++; // skip closing quote
-      continue;
-    }
-    i++;
-  }
-  return out.join('');
 }
 
 /**

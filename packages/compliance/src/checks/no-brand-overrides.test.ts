@@ -164,4 +164,22 @@ describe('checkNoBrandOverrides (integration)', () => {
     const r = await checkNoBrandOverrides(fsFileSource(dir));
     expect(r.status).toBe('fail');
   });
+
+  // --- comment-stripping regression guards ---
+
+  it('does NOT flag a font-family mention inside a // comment', async () => {
+    const dir = await fixture({
+      'web/src/App.tsx': '// font-family: "Comic Sans" — used to be here\nexport {};',
+    });
+    const r = await checkNoBrandOverrides(fsFileSource(dir));
+    expect(r.status).toBe('pass');
+  });
+
+  it('does NOT flag a CSS-variable override inside a /* CSS comment */', async () => {
+    const dir = await fixture({
+      'web/src/components/Card.css': '/* :root { --accent: hotpink; } — old palette */ .card {}',
+    });
+    const r = await checkNoBrandOverrides(fsFileSource(dir));
+    expect(r.status).toBe('pass');
+  });
 });

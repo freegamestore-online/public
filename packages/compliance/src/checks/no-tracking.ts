@@ -1,4 +1,5 @@
 import type { FileSource } from '../lib/file-source.js';
+import { stripCommentsForExt } from '../lib/strip.js';
 import type { CheckResult } from '../types.js';
 
 // Each tracker carries one or more patterns that should ONLY match real SDK
@@ -74,10 +75,19 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
   const hits: { file: string; matches: string[] }[] = [];
 
   for await (const path of source.list()) {
-    if (!SCAN_EXTS.has(extOf(path))) continue;
+    const ext = extOf(path);
+    if (!SCAN_EXTS.has(ext)) continue;
     if (isSelfReferenceTestFile(path)) continue;
-    const content = await source.read(path);
-    if (!content) continue;
+    const raw = await source.read(path);
+    if (!raw) continue;
+    // Strip comments only — NOT string literals. Real tracker imports
+    // live inside strings (`import from "@amplitude/..."`,
+    // `<script src="https://www.google-analytics.com/...">`), so
+    // erasing string contents would erase the very evidence we need.
+    // A rare false positive remains if someone mentions a tracker name
+    // inside a non-import string literal; comment-stripping handles the
+    // common case (documentation comments).
+    const content = stripCommentsForExt(raw, ext);
     const matches = TRACKERS.filter((t) => t.patterns.some((re) => re.test(content))).map(
       (t) => t.name,
     );

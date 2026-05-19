@@ -101,7 +101,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     ],
   },
   {
-    "detail": "1 file(s) reference trackers: web/src/tracking.ts (google-analytics, gtag)",
+    "detail": "1 file(s) reference trackers: web/src/tracking.ts (amplitude)",
     "name": "No tracking SDKs",
     "status": "fail",
     "suggestions": [
@@ -110,11 +110,10 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     ],
   },
   {
-    "detail": "3 occurrences of 100vh / h-screen — breaks on iOS Safari with URL bar visible",
+    "detail": "2 occurrences of 100vh / h-screen — breaks on iOS Safari with URL bar visible",
     "name": "No unsafe 100vh",
     "status": "warn",
     "suggestions": [
-      "web/src/index.css:2 100vh — use 100svh or 100dvh",
       "web/src/index.css:4 100vh — use 100svh or 100dvh",
       "web/src/index.css:9 100vh — use 100svh or 100dvh",
       "Replace with 100svh (preferred) or 100dvh. Add \`// allow-100vh\` on the line if intentional.",
