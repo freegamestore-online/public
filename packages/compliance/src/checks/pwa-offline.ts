@@ -34,10 +34,14 @@ export async function checkPwaOffline(source: FileSource): Promise<CheckResult> 
   const config = await source.read(VITE_CONFIG);
   const html = await source.read(INDEX_HTML);
 
+  // Strip HTML comments before matching — `<!-- <link rel="manifest"> -->`
+  // is not a live install claim, and a commented-out fonts <link> is
+  // not loading anything.
+  const htmlCode = html === null ? null : stripHtmlComments(html);
   const linksManifest =
-    html !== null && /<link[^>]+rel\s*=\s*["']manifest["']/i.test(html);
+    htmlCode !== null && /<link[^>]+rel\s*=\s*["']manifest["']/i.test(htmlCode);
   const linksGoogleFonts =
-    html !== null && /fonts\.(googleapis|gstatic)\.com/i.test(html);
+    htmlCode !== null && /fonts\.(googleapis|gstatic)\.com/i.test(htmlCode);
 
   // Strip comments and string-literal contents before any regex matching
   // against the config text — otherwise `VitePWA(` in a comment or
@@ -133,16 +137,42 @@ export async function checkPwaOffline(source: FileSource): Promise<CheckResult> 
   const suggestions: string[] = [];
 
   // Issue 1: bundle-size cap. Default is 2 MiB; many real bundles exceed it.
-  if (!/maximumFileSizeToCacheInBytes/.test(workbox)) {
+  // Also catch the inverse footgun: a value *lower* than the default
+  // (e.g. someone copy-pasted `1024` thinking it was MB), which silently
+  // makes precache worse.
+  const capValue = parseBundleCap(workbox);
+  const DEFAULT_CAP = 2 * 1024 * 1024;
+  if (capValue === null) {
     issues.push('no maximumFileSizeToCacheInBytes (defaults to 2 MB — bigger chunks silently skipped from precache)');
     suggestions.push('Set `maximumFileSizeToCacheInBytes: 10 * 1024 * 1024` so the main bundle is precached.');
+  } else if (capValue < DEFAULT_CAP) {
+    issues.push(`maximumFileSizeToCacheInBytes is ${capValue} bytes — smaller than the workbox default (2 MB); any chunk above this is dropped from precache`);
+    suggestions.push('Raise to at least `10 * 1024 * 1024` (10 MB) so real bundles fit.');
+  }
+
+  // `VitePWA({ disable: true })` literal turns the plugin off in all
+  // environments, so the manifest link is broken. Only flag the
+  // unconditional literal — `disable: process.env.NODE_ENV !==
+  // "production"` is a common, correct dev-only pattern that we can't
+  // evaluate statically.
+  if (configCode && /\bdisable\s*:\s*true\b/.test(configCode)) {
+    issues.push('VitePWA({ disable: true }) literal — service worker will never register');
+    suggestions.push('Drop `disable: true`, or gate it behind a non-production check.');
   }
 
   // Issue 2: Google Fonts with no runtime caching.
   if (linksGoogleFonts) {
     const hasGoogleApisRule = /fonts\\?\.googleapis\\?\.com/.test(workbox);
     const hasGstaticRule = /fonts\\?\.gstatic\\?\.com/.test(workbox);
-    if (!hasGoogleApisRule || !hasGstaticRule) {
+    // Workbox also lets you target by `request.destination` — a rule
+    // like `({request}) => request.destination === "font"` catches
+    // every font request including Google Fonts. Accept that as
+    // covering both endpoints rather than emitting a false warn.
+    const hasDestinationFontRule =
+      /\bdestination\b/.test(workbox) && /["']font["']/.test(workbox);
+    const fontsCovered =
+      (hasGoogleApisRule && hasGstaticRule) || hasDestinationFontRule;
+    if (!fontsCovered) {
       issues.push('index.html loads Google Fonts but workbox has no runtimeCaching for fonts.googleapis.com / fonts.gstatic.com');
       suggestions.push(
         'Add runtimeCaching CacheFirst rules for /^https:\\/\\/fonts\\.googleapis\\.com/ and /^https:\\/\\/fonts\\.gstatic\\.com/.',
@@ -180,6 +210,60 @@ export async function checkPwaOffline(source: FileSource): Promise<CheckResult> 
     detail: issues.join('; '),
     suggestions,
   };
+}
+
+/**
+ * Parse the numeric value assigned to `maximumFileSizeToCacheInBytes`.
+ * Handles simple integer literals (`10485760`), underscore separators
+ * (`10_485_760`), and `A * B * C` arithmetic chains that workbox docs
+ * recommend (`10 * 1024 * 1024`). Returns null if the key isn't present
+ * or the value isn't a recognisable arithmetic literal.
+ */
+function parseBundleCap(workbox: string): number | null {
+  const m = workbox.match(/maximumFileSizeToCacheInBytes\s*:\s*([^,\n}]+)/);
+  if (!m) return null;
+  const expr = (m[1] ?? '').trim().replace(/_/g, '');
+  // Strict: only digits, *, whitespace. Anything else (variable
+  // reference, function call) → can't evaluate, treat as unknown.
+  if (!/^[\d*\s]+$/.test(expr)) return null;
+  const parts = expr.split('*').map((s) => Number(s.trim()));
+  if (parts.some((n) => !Number.isFinite(n) || n < 0)) return null;
+  return parts.reduce((a, b) => a * b, 1);
+}
+
+/**
+ * Replace every `<!-- ... -->` comment body with spaces (preserving
+ * positions). Used before HTML regex matches so that commented-out
+ * tags don't false-positive — `<!-- <link rel="manifest"> -->` is not
+ * a live install claim.
+ *
+ * HTML comments don't nest in real-world docs; first `-->` ends the
+ * comment. Doesn't try to handle CDATA or downlevel-revealed comments.
+ */
+function stripHtmlComments(src: string): string {
+  const out = src.split('');
+  let i = 0;
+  while (i < src.length) {
+    if (
+      src[i] === '<' &&
+      src[i + 1] === '!' &&
+      src[i + 2] === '-' &&
+      src[i + 3] === '-'
+    ) {
+      const start = i;
+      i += 4;
+      while (
+        i < src.length &&
+        !(src[i] === '-' && src[i + 1] === '-' && src[i + 2] === '>')
+      )
+        i++;
+      i = Math.min(src.length, i + 3);
+      for (let k = start; k < i; k++) if (out[k] !== '\n') out[k] = ' ';
+      continue;
+    }
+    i++;
+  }
+  return out.join('');
 }
 
 /**
@@ -273,13 +357,31 @@ function extractBalancedBlock(
  * look like glob patterns with a brace-expansion (e.g.
  * `**\/*.{js,css,wasm}`), and unions their extensions. Returns null if
  * no `globPatterns:` key is present at all.
+ *
+ * Bracket-balances the array body on a string-stripped view so that
+ * glob bracket expressions like `**\/[abc]/*` don't truncate the array
+ * — that `]` lives inside a string literal and isn't the array's close.
  */
 function extractCoveredExtensions(workbox: string): Set<string> | null {
-  const match = workbox.match(/globPatterns\s*:\s*\[([^\]]*)\]/);
-  if (!match) return null;
-  const arrayBody = match[1] ?? '';
+  const workboxCode = stripCommentsAndStrings(workbox);
+  const keyMatch = workboxCode.match(/globPatterns\s*:\s*\[/);
+  if (!keyMatch || keyMatch.index === undefined) return null;
+  // Walk the stripped view to find the matching `]` for this `[`.
+  let i = keyMatch.index + keyMatch[0].length;
+  const start = i;
+  let depth = 1;
+  while (i < workboxCode.length && depth > 0) {
+    const c = workboxCode[i];
+    if (c === '[') depth++;
+    else if (c === ']') depth--;
+    if (depth === 0) break;
+    i++;
+  }
+  if (depth !== 0) return null;
+  // Pull the real (un-stripped) array body so we still see the
+  // quoted patterns.
+  const arrayBody = workbox.slice(start, i);
   const covered = new Set<string>();
-  // Pull each quoted string out of the array body.
   for (const m of arrayBody.matchAll(/["']([^"']+)["']/g)) {
     const pattern = m[1] ?? '';
     const brace = pattern.match(/\{([^}]+)\}/);

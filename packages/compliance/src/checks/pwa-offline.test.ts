@@ -283,6 +283,161 @@ describe('checkPwaOffline', () => {
     expect(r.status).toBe('fail');
   });
 
+  it('ignores HTML-commented <link rel="manifest"> (B7)', async () => {
+    // Dev temporarily disables install via HTML comment. The check
+    // should not flag this as a broken installable PWA.
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [
+            INDEX_HTML,
+            '<html><head><!-- <link rel="manifest" href="/m.json"> --></head></html>',
+          ],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('pass');
+  });
+
+  it('accepts request.destination filter as Google Fonts coverage (B8)', async () => {
+    // A `({request}) => request.destination === "font"` rule catches
+    // every font request including Google Fonts. Must not warn.
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2,wasm,json}"],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          runtimeCaching: [{
+            urlPattern: ({ request }) => request.destination === "font",
+            handler: "CacheFirst",
+          }],
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_WITH_FONTS],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('pass');
+  });
+
+  it('warns when maximumFileSizeToCacheInBytes is set below the workbox default (B10)', async () => {
+    // Setting it to a value smaller than the 2 MB default is worse
+    // than not setting it at all — small bundles still get dropped.
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2,wasm,json}"],
+          maximumFileSizeToCacheInBytes: 1024,
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_NO_FONTS],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('warn');
+    expect(r.detail).toMatch(/smaller than/i);
+  });
+
+  it('parses arithmetic in the bundle cap (e.g. 10 * 1024 * 1024)', async () => {
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2,wasm,json}"],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          runtimeCaching: [
+            { urlPattern: /^https:\\/\\/fonts\\.googleapis\\.com\\/.*/i },
+            { urlPattern: /^https:\\/\\/fonts\\.gstatic\\.com\\/.*/i },
+          ],
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_WITH_FONTS],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('pass');
+  });
+
+  it('warns when VitePWA is unconditionally disabled (B11)', async () => {
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        disable: true,
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2,wasm,json}"],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_NO_FONTS],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('warn');
+    expect(r.detail).toMatch(/disable: true/i);
+  });
+
+  it('does not warn on conditional `disable: <expression>` (common dev-only pattern)', async () => {
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        disable: process.env.NODE_ENV !== "production",
+        workbox: {
+          globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2,wasm,json}"],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_NO_FONTS],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('pass');
+  });
+
+  it('handles globPatterns with glob bracket expressions [abc] (B9)', async () => {
+    // The `[abc]` is inside the string literal — must not be mistaken
+    // for the closing `]` of the globPatterns array.
+    const config = `
+      import { VitePWA } from "vite-plugin-pwa";
+      export default { plugins: [VitePWA({
+        workbox: {
+          globPatterns: ["**/[abc]/*.{js,css,html,png,svg,ico,woff2}", "**/*.wasm"],
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        },
+      })] };`;
+    const r = await checkPwaOffline(
+      mapFileSource(
+        new Map([
+          [VITE_CONFIG, config],
+          [INDEX_HTML, HTML_NO_FONTS],
+          ['web/public/engine.wasm', '\0'],
+        ]),
+      ),
+    );
+    expect(r.status).toBe('pass');
+  });
+
   it('ignores "workbox: {" appearing inside a string literal (B6)', async () => {
     // A const help-text string mentioning the workbox shape should not
     // be picked up as the actual config block.
