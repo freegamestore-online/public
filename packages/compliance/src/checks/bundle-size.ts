@@ -2,8 +2,16 @@ import type { FileSource } from '../lib/file-source.js';
 import { gzipByteLength } from '../lib/gzip.js';
 import type { CheckResult } from '../types.js';
 
-const MAX_GZIP_BYTES = 300 * 1024; // 300 KB — matches the template's compliance.yml
+const MAX_GZIP_BYTES_DEFAULT = 300 * 1024; // 300 KB for 2D / DOM games
+const MAX_GZIP_BYTES_3D = 600 * 1024; // 600 KB for games shipping a 3D engine
+
+// Heavy 3D engines that justify a larger budget. If any of these are a
+// runtime dependency, the limit is raised — a Babylon-based bowling game
+// can't realistically fit under 300KB and shouldn't have to.
+const HEAVY_3D_DEPS = ['@babylonjs/core', 'three', '@react-three/fiber'];
+
 const ASSETS_DIR = 'web/dist/assets';
+const PACKAGE_JSON = 'web/package.json';
 
 /**
  * Checks the largest JS asset under web/dist/assets/ against the 300KB-gzip
@@ -70,13 +78,15 @@ export async function checkBundleSize(source: FileSource): Promise<CheckResult> 
   }
   const gzipped = await gzipByteLength(content);
   const kb = (gzipped / 1024).toFixed(1);
-  const limitKb = (MAX_GZIP_BYTES / 1024).toFixed(0);
 
-  if (gzipped > MAX_GZIP_BYTES) {
+  const { limit, reason } = await pickLimit(source);
+  const limitKb = (limit / 1024).toFixed(0);
+
+  if (gzipped > limit) {
     return {
       name: 'Bundle size',
       status: 'fail',
-      detail: `${largest}: ${kb} KB gzipped (limit ${limitKb} KB)`,
+      detail: `${largest}: ${kb} KB gzipped (limit ${limitKb} KB${reason ? ` · ${reason}` : ''})`,
       suggestions: [
         'Find heavy dependencies: `pnpm dlx vite-bundle-visualizer`',
         'Lazy-load non-critical screens with dynamic import().',
@@ -88,6 +98,23 @@ export async function checkBundleSize(source: FileSource): Promise<CheckResult> 
   return {
     name: 'Bundle size',
     status: 'pass',
-    detail: `${largest}: ${kb} KB gzipped (limit ${limitKb} KB)`,
+    detail: `${largest}: ${kb} KB gzipped (limit ${limitKb} KB${reason ? ` · ${reason}` : ''})`,
   };
+}
+
+async function pickLimit(source: FileSource): Promise<{ limit: number; reason: string }> {
+  const pkgRaw = await source.read(PACKAGE_JSON);
+  if (pkgRaw) {
+    try {
+      const pkg = JSON.parse(pkgRaw) as { dependencies?: Record<string, unknown> };
+      const deps = pkg.dependencies ?? {};
+      const heavy = HEAVY_3D_DEPS.find((d) => Object.prototype.hasOwnProperty.call(deps, d));
+      if (heavy) {
+        return { limit: MAX_GZIP_BYTES_3D, reason: `3D engine: ${heavy}` };
+      }
+    } catch {
+      // fall through to default
+    }
+  }
+  return { limit: MAX_GZIP_BYTES_DEFAULT, reason: '' };
 }
