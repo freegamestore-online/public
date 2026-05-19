@@ -14,6 +14,17 @@ const FORBIDDEN = [
   'posthog',
 ];
 
+// Precompiled word-boundary regexes so we don't match "segment" inside
+// "segmentation" (legitimate 3D-mesh code in bowling triggers this).
+// Boundaries: start/end OR adjacent to one of `"'`/.\s(){}[],;:`
+const FORBIDDEN_REGEXES = FORBIDDEN.map(
+  (s) => new RegExp(`(?:^|[^a-zA-Z0-9_])${escapeForRegExp(s)}(?:$|[^a-zA-Z0-9_])`, 'i'),
+);
+
+function escapeForRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const SCAN_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.json']);
 
 // Per-game compliance tests legitimately mention these tracker names as
@@ -31,7 +42,7 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
     if (isSelfReferenceTestFile(path)) continue;
     const content = await source.read(path);
     if (!content) continue;
-    const matches = FORBIDDEN.filter((sdk) => content.includes(sdk));
+    const matches = FORBIDDEN.filter((_sdk, i) => FORBIDDEN_REGEXES[i]!.test(content));
     if (matches.length > 0) {
       hits.push({ file: path, matches });
     }
