@@ -1,31 +1,67 @@
 import type { FileSource } from '../lib/file-source.js';
 import type { CheckResult } from '../types.js';
 
-// Same forbidden list the template's compliance.yml enforces — kept in
-// sync because both are downstream consumers of this package long-term.
-const FORBIDDEN = [
-  'google-analytics',
-  'gtag',
-  'amplitude',
-  'mixpanel',
-  'segment',
-  'hotjar',
-  'plausible',
-  'posthog',
+// Each tracker carries one or more patterns that should ONLY match real SDK
+// usage — never bare English words used as geometry / math / physics terms.
+//
+// Distinctive package names (mixpanel, plausible, posthog, hotjar) are safe
+// with word-boundary matching. Ambiguous English words (segment, amplitude)
+// require SDK-context patterns (scoped import, hostname, call site).
+type TrackerSpec = {
+  name: string;
+  patterns: RegExp[];
+};
+
+function wb(name: string): RegExp {
+  // word-boundary, case-insensitive: only matches the literal token surrounded
+  // by non-word chars (or string start/end). Avoids `segmentation`, `collideSegment`.
+  return new RegExp(`(?:^|[^a-zA-Z0-9_])${escapeForRegExp(name)}(?:$|[^a-zA-Z0-9_])`, 'i');
+}
+
+const TRACKERS: TrackerSpec[] = [
+  { name: 'google-analytics', patterns: [/google-analytics/i, /googletagmanager\.com/i] },
+  // `gtag` as a bare token would catch nothing real, but the GA install snippet
+  // always calls it like `gtag('config', ...)` or `gtag('event', ...)` or
+  // declares `window.gtag = ...`. Match those, not the bare identifier.
+  { name: 'gtag', patterns: [/\bgtag\s*\(\s*['"]/i, /window\.gtag\b/i, /gtag\.js/i] },
+  // Amplitude SDK shows up as @amplitude/* scoped package, amplitude.com host,
+  // or amplitude.init/track/getInstance call. Bare `amplitude` (the math term)
+  // is fine.
+  {
+    name: 'amplitude',
+    patterns: [
+      /@amplitude\//i,
+      /amplitude\.com/i,
+      /\bamplitude\s*\.\s*(?:init|track|getInstance|setUserId|logEvent)\b/i,
+      /require\(['"]amplitude/i,
+      /from\s+['"]amplitude/i,
+    ],
+  },
+  { name: 'mixpanel', patterns: [wb('mixpanel')] },
+  // Segment SDK: scoped package, hostname, or window.analytics.track/identify.
+  // Bare `segment` (geometry term — ball-line-segment, drop-target row segment)
+  // is fine.
+  {
+    name: 'segment',
+    patterns: [
+      /@segment\//i,
+      /segment\.io/i,
+      /segment\.com\/analytics/i,
+      /cdn\.segment\.com/i,
+      /window\.analytics\s*\.\s*(?:track|identify|page|group)\b/i,
+      /\bAnalyticsBrowser\.load\b/i,
+    ],
+  },
+  { name: 'hotjar', patterns: [wb('hotjar')] },
+  { name: 'plausible', patterns: [wb('plausible')] },
+  { name: 'posthog', patterns: [wb('posthog')] },
 ];
 
-// Precompiled word-boundary regexes so we don't match "segment" inside
-// "segmentation" (legitimate 3D-mesh code in bowling triggers this).
-// Boundaries: start/end OR adjacent to one of `"'`/.\s(){}[],;:`
-const FORBIDDEN_REGEXES = FORBIDDEN.map(
-  (s) => new RegExp(`(?:^|[^a-zA-Z0-9_])${escapeForRegExp(s)}(?:$|[^a-zA-Z0-9_])`, 'i'),
-);
+const SCAN_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.json']);
 
 function escapeForRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-
-const SCAN_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html', '.json']);
 
 // Per-game compliance tests legitimately mention these tracker names as
 // the banned list they assert NOT to find. Treating those as positives
@@ -42,7 +78,9 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
     if (isSelfReferenceTestFile(path)) continue;
     const content = await source.read(path);
     if (!content) continue;
-    const matches = FORBIDDEN.filter((_sdk, i) => FORBIDDEN_REGEXES[i]!.test(content));
+    const matches = TRACKERS.filter((t) => t.patterns.some((re) => re.test(content))).map(
+      (t) => t.name,
+    );
     if (matches.length > 0) {
       hits.push({ file: path, matches });
     }
@@ -52,7 +90,7 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
     return {
       name: 'No tracking SDKs',
       status: 'pass',
-      detail: `scanned for ${FORBIDDEN.length} known trackers`,
+      detail: `scanned for ${TRACKERS.length} known trackers`,
     };
   }
 

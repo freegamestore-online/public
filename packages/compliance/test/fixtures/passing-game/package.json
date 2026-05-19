@@ -6,6 +6,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@freeappstore/games": "^0.1.0"
+    "@freegamestore/games": "^0.13.0"
   }
 }

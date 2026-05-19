@@ -1,7 +1,7 @@
 export function Footer() {
   return (
     <footer>
-      Built for <a href="https://freeappstore.online">FreeAppStore</a>.
+      Built for <a href="https://freegamestore.online">FreeGameStore</a>.
     </footer>
   );
 }

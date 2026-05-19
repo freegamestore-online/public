@@ -24,7 +24,9 @@ const SKILLS_URL =
 // belong in SKILLS.md. Match leading-`##` headers, case-insensitive.
 const BOILERPLATE_HEADERS = [
   'platform: freegamestore',
-  'platform: freegamestore',
+  // Legacy FAS-era CLAUDE.md still found in some repos; catch it too
+  // so the FGS migration sweep keeps surfacing them.
+  'platform: freeappstore',
   'tech stack',
   'brand guidelines',
   'brand', // bare "## Brand"

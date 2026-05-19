@@ -12,7 +12,7 @@ describe('checkStoreLink', () => {
     ]);
     const r = await checkStoreLink(mapFileSource(files));
     expect(r.status).toBe('pass');
-    expect(r.detail).toMatch(/freeappstore\.online/);
+    expect(r.detail).toMatch(/freegamestore\.online/);
   });
 
   it('passes for a game referencing freegamestore.online when @freegamestore/games is present', async () => {
@@ -25,11 +25,13 @@ describe('checkStoreLink', () => {
     expect(r.detail).toMatch(/freegamestore\.online/);
   });
 
-  it('warns for an app that links freegamestore but not freeappstore', async () => {
-    const files = new Map([['web/src/About.tsx', 'const x = "freegamestore.online";']]);
+  it('warns when web/src/ has no freegamestore.online link anywhere', async () => {
+    // Files reference an unrelated URL — the storefront link is required
+    // so visitors can discover the rest of the catalog.
+    const files = new Map([['web/src/About.tsx', 'const x = "https://example.com";']]);
     const r = await checkStoreLink(mapFileSource(files));
     expect(r.status).toBe('warn');
-    expect(r.detail).toMatch(/freeappstore\.online/);
+    expect(r.detail).toMatch(/freegamestore\.online/);
   });
 
   it('warns when no store link anywhere in web/src/', async () => {

@@ -15,7 +15,7 @@ A free app on FreeAppStore.
 - Deploy: \`git push origin main\` (auto-deploys via Cloudflare Pages)
 
 Free, MIT-licensed, no tracking. For platform conventions, read
-https://raw.githubusercontent.com/freegamestore-online/freeappstore/main/SKILLS.md
+https://raw.githubusercontent.com/freegamestore-online/freegamestore/main/SKILLS.md
 before writing or changing anything.
 `;
 
@@ -51,14 +51,14 @@ describe('checkClaudeMdSlim', () => {
     expect(r.detail).toMatch(/Tech Stack/);
   });
 
-  it('warns on "## Platform: FreeAppStore" header', async () => {
+  it('warns on "## Platform: FreeGameStore" header', async () => {
     await writeFile(
       join(dir, 'CLAUDE.md'),
-      `# myapp\n\n## Platform: FreeAppStore\n- Hosted on CF Pages\n\n${SLIM_CLAUDE_MD.split('\n').slice(2).join('\n')}`,
+      `# myapp\n\n## Platform: FreeGameStore\n- Hosted on CF Pages\n\n${SLIM_CLAUDE_MD.split('\n').slice(2).join('\n')}`,
     );
     const r = await checkClaudeMdSlim(fsFileSource(dir));
     expect(r.status).toBe('warn');
-    expect(r.detail).toMatch(/Platform: FreeAppStore/);
+    expect(r.detail).toMatch(/Platform: FreeGameStore/);
   });
 
   it('warns on "## Brand Guidelines" header', async () => {

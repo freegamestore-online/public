@@ -31,7 +31,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "status": "warn",
   },
   {
-    "detail": "platform-boilerplate sections: Tech Stack, Brand Guidelines, Rules; missing SKILLS.md pointer",
+    "detail": "platform-boilerplate sections: Platform: FreeAppStore, Tech Stack, Brand Guidelines, Rules; missing SKILLS.md pointer",
     "name": "CLAUDE.md is slim (no platform boilerplate)",
     "status": "warn",
     "suggestions": [
