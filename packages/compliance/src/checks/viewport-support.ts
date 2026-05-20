@@ -1,5 +1,5 @@
-import { extractInlineManifest, type InlineManifest } from '../lib/inline-manifest.js';
 import type { FileSource } from '../lib/file-source.js';
+import { extractInlineManifest, type InlineManifest } from '../lib/inline-manifest.js';
 import type { CheckResult } from '../types.js';
 
 const STATIC_MANIFEST_PATH = 'web/public/manifest.json';
@@ -89,7 +89,9 @@ export async function checkViewportSupport(source: FileSource): Promise<CheckRes
   };
 }
 
-async function loadManifest(source: FileSource): Promise<InlineManifest | Record<string, unknown> | null> {
+async function loadManifest(
+  source: FileSource,
+): Promise<InlineManifest | Record<string, unknown> | null> {
   const staticRaw = await source.read(STATIC_MANIFEST_PATH);
   if (staticRaw !== null) {
     try {

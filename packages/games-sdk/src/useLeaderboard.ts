@@ -10,6 +10,23 @@ export interface LeaderboardEntry {
   created_at: string;
 }
 
+// Wire shape returned by the leaderboard Worker for both /api/leaderboard/:game
+// and /api/leaderboard/:game/recent — the row data lives under `.scores`.
+interface LeaderboardResponse {
+  game: string;
+  scores: LeaderboardEntry[];
+}
+
+// POST /api/scores response — the rank lookup runs against signed-in
+// users only, so an anonymous submit returns `authenticated: false`
+// with no rank.
+interface SubmitScoreResponse {
+  ok?: boolean;
+  rank?: number;
+  authenticated?: boolean;
+  error?: string;
+}
+
 export function useLeaderboard(gameId: string): {
   topScores: LeaderboardEntry[];
   recentScores: LeaderboardEntry[];
@@ -24,11 +41,21 @@ export function useLeaderboard(gameId: string): {
   const load = useCallback(() => {
     setLoading(true);
     Promise.all([
-      fetch(`${API_BASE}/scores/${gameId}?sort=top`, { credentials: 'include' })
-        .then((r) => (r.ok ? (r.json() as Promise<LeaderboardEntry[]>) : []))
+      fetch(`${API_BASE}/api/leaderboard/${gameId}?limit=50`, { credentials: 'include' })
+        .then(async (r) => {
+          if (!r.ok) return [] as LeaderboardEntry[];
+          const data = (await r.json()) as LeaderboardResponse;
+          return data.scores ?? [];
+        })
         .catch(() => [] as LeaderboardEntry[]),
-      fetch(`${API_BASE}/scores/${gameId}?sort=recent`, { credentials: 'include' })
-        .then((r) => (r.ok ? (r.json() as Promise<LeaderboardEntry[]>) : []))
+      fetch(`${API_BASE}/api/leaderboard/${gameId}/recent?limit=50`, {
+        credentials: 'include',
+      })
+        .then(async (r) => {
+          if (!r.ok) return [] as LeaderboardEntry[];
+          const data = (await r.json()) as LeaderboardResponse;
+          return data.scores ?? [];
+        })
         .catch(() => [] as LeaderboardEntry[]),
     ]).then(([top, recent]) => {
       setTopScores(top);
@@ -44,17 +71,19 @@ export function useLeaderboard(gameId: string): {
   const submitScore = useCallback(
     async (score: number): Promise<{ ok: boolean; rank?: number }> => {
       try {
-        const res = await fetch(`${API_BASE}/scores/${gameId}`, {
+        // The Worker wants `{ game, score }` (and an optional `name` if not
+        // signed in; signed-in users get their name from the cookie JWT).
+        const res = await fetch(`${API_BASE}/api/scores`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ score }),
+          body: JSON.stringify({ game: gameId, score }),
         });
         if (!res.ok) return { ok: false };
-        const data = (await res.json()) as { rank?: number };
+        const data = (await res.json()) as SubmitScoreResponse;
         // Refresh scores after submission
         load();
-        const result: { ok: boolean; rank?: number } = { ok: true };
+        const result: { ok: boolean; rank?: number } = { ok: data.ok !== false };
         if (data.rank !== undefined) result.rank = data.rank;
         return result;
       } catch {

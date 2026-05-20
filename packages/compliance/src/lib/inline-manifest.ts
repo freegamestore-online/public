@@ -43,22 +43,49 @@ export function extractInlineManifest(viteConfig: string): InlineManifest | null
   let inSingle = false;
   let inDouble = false;
   let inBacktick = false;
-  let escape = false;
+  let escaped = false;
   let endIdx = -1;
   for (let i = openIdx; i < viteConfig.length; i++) {
     const ch = viteConfig[i]!;
-    if (escape) { escape = false; continue; }
-    if (ch === '\\') { escape = true; continue; }
-    if (inSingle) { if (ch === "'") inSingle = false; continue; }
-    if (inDouble) { if (ch === '"') inDouble = false; continue; }
-    if (inBacktick) { if (ch === '`') inBacktick = false; continue; }
-    if (ch === "'") { inSingle = true; continue; }
-    if (ch === '"') { inDouble = true; continue; }
-    if (ch === '`') { inBacktick = true; continue; }
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (inSingle) {
+      if (ch === "'") inSingle = false;
+      continue;
+    }
+    if (inDouble) {
+      if (ch === '"') inDouble = false;
+      continue;
+    }
+    if (inBacktick) {
+      if (ch === '`') inBacktick = false;
+      continue;
+    }
+    if (ch === "'") {
+      inSingle = true;
+      continue;
+    }
+    if (ch === '"') {
+      inDouble = true;
+      continue;
+    }
+    if (ch === '`') {
+      inBacktick = true;
+      continue;
+    }
     if (ch === '{') depth++;
     else if (ch === '}') {
       depth--;
-      if (depth === 0) { endIdx = i; break; }
+      if (depth === 0) {
+        endIdx = i;
+        break;
+      }
     }
   }
   if (endIdx < 0) return null;

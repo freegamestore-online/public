@@ -88,10 +88,7 @@ describe('failing-app fixture', () => {
     // PWA offline correctness (it ships web/index.html with no SW).
     // The remaining passes: no-scroll skips because it's not a game
     // project, and audio-mute-respect passes because no raw audio.
-    expect(summary.pass.sort()).toEqual([
-      'Audio respects platform mute',
-      'No scroll (games only)',
-    ]);
+    expect(summary.pass.sort()).toEqual(['Audio respects platform mute', 'No scroll (games only)']);
   });
 });
 

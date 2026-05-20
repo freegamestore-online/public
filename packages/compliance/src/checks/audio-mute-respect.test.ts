@@ -4,9 +4,7 @@ import { checkAudioMuteRespect } from './audio-mute-respect.js';
 
 describe('checkAudioMuteRespect', () => {
   it('passes when no raw audio APIs are used', async () => {
-    const files = new Map([
-      ['web/src/App.tsx', 'export default function App() { return null; }'],
-    ]);
+    const files = new Map([['web/src/App.tsx', 'export default function App() { return null; }']]);
     const r = await checkAudioMuteRespect(mapFileSource(files));
     expect(r.status).toBe('pass');
     expect(r.detail).toMatch(/no raw audio/);
@@ -38,19 +36,14 @@ describe('checkAudioMuteRespect', () => {
 
   it('does NOT fire when `new Audio(` appears only inside a // comment', async () => {
     const files = new Map([
-      [
-        'web/src/lib.ts',
-        '// Avoid `new Audio()` — use useGameSounds instead.\nexport {};',
-      ],
+      ['web/src/lib.ts', '// Avoid `new Audio()` — use useGameSounds instead.\nexport {};'],
     ]);
     const r = await checkAudioMuteRespect(mapFileSource(files));
     expect(r.status).toBe('pass');
   });
 
   it('does NOT fire when `new Audio(` is only a string-literal example', async () => {
-    const files = new Map([
-      ['web/src/help.ts', 'const example = "new Audio()";\nexport {};'],
-    ]);
+    const files = new Map([['web/src/help.ts', 'const example = "new Audio()";\nexport {};']]);
     const r = await checkAudioMuteRespect(mapFileSource(files));
     expect(r.status).toBe('pass');
   });

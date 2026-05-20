@@ -109,7 +109,7 @@ async function pickLimit(source: FileSource): Promise<{ limit: number; reason: s
     try {
       const pkg = JSON.parse(pkgRaw) as { dependencies?: Record<string, unknown> };
       const deps = pkg.dependencies ?? {};
-      const heavy = HEAVY_3D_DEPS.find((d) => Object.prototype.hasOwnProperty.call(deps, d));
+      const heavy = HEAVY_3D_DEPS.find((d) => Object.hasOwn(deps, d));
       if (heavy) {
         return { limit: MAX_GZIP_BYTES_3D, reason: `3D engine: ${heavy}` };
       }

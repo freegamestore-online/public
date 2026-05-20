@@ -34,9 +34,7 @@ export async function checkNoBrandOverrides(source: FileSource): Promise<CheckRe
     // we're auditing. For .css/.scss use the css-only stripper (no `//`
     // syntax at the language level).
     const content =
-      ext === '.css' || ext === '.scss'
-        ? stripCssComments(raw)
-        : stripCommentsOnly(raw);
+      ext === '.css' || ext === '.scss' ? stripCssComments(raw) : stripCommentsOnly(raw);
     // Canonical theme file: the platform's CSS variables ARE defined here.
     // Apps own this file post-scaffold (they can technically modify token
     // values, and we accept the imperfection — the loud places where a
@@ -167,7 +165,12 @@ export function scanContent(
     for (const cand of candidates) {
       const tokens = cand
         .split(',')
-        .map((t) => t.trim().replace(/^["']|["']$/g, '').toLowerCase())
+        .map((t) =>
+          t
+            .trim()
+            .replace(/^["']|["']$/g, '')
+            .toLowerCase(),
+        )
         .filter(Boolean);
       for (const t of tokens) {
         if (!ALLOWED_FONT_TOKENS.has(t)) {

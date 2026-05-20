@@ -1,5 +1,5 @@
-import { extractInlineManifest } from '../lib/inline-manifest.js';
 import type { FileSource } from '../lib/file-source.js';
+import { extractInlineManifest } from '../lib/inline-manifest.js';
 import type { CheckResult } from '../types.js';
 
 const STATIC_MANIFEST_PATH = 'web/public/manifest.json';

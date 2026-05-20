@@ -65,11 +65,7 @@ describe('checkPwaOffline', () => {
     // in the org without a web entry aren't subject to the storefront
     // PWA requirement.
     const r = await checkPwaOffline(
-      mapFileSource(
-        new Map([
-          [VITE_CONFIG, 'export default { plugins: [] };'],
-        ]),
-      ),
+      mapFileSource(new Map([[VITE_CONFIG, 'export default { plugins: [] };']])),
     );
     expect(r.status).toBe('pass');
   });
@@ -222,9 +218,7 @@ describe('checkPwaOffline', () => {
     const inlineRegister =
       '<html><head><link rel="manifest" href="/m.json" /></head><body>' +
       '<script>navigator.serviceWorker.register("/sw.js")</script></body></html>';
-    const r = await checkPwaOffline(
-      mapFileSource(new Map([[INDEX_HTML, inlineRegister]])),
-    );
+    const r = await checkPwaOffline(mapFileSource(new Map([[INDEX_HTML, inlineRegister]])));
     expect(r.status).toBe('pass');
     expect(r.detail).toMatch(/hand-rolled service worker/i);
   });
@@ -234,7 +228,10 @@ describe('checkPwaOffline', () => {
       mapFileSource(
         new Map([
           [INDEX_HTML, HTML_NO_FONTS], // has manifest link
-          ['web/src/main.tsx', 'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");'],
+          [
+            'web/src/main.tsx',
+            'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");',
+          ],
         ]),
       ),
     );
@@ -347,10 +344,7 @@ describe('checkPwaOffline', () => {
     const r = await checkPwaOffline(
       mapFileSource(
         new Map([
-          [
-            INDEX_HTML,
-            '<html><head><!-- <link rel="manifest" href="/m.json"> --></head></html>',
-          ],
+          [INDEX_HTML, '<html><head><!-- <link rel="manifest" href="/m.json"> --></head></html>'],
         ]),
       ),
     );

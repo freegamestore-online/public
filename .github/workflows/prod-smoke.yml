@@ -28,8 +28,8 @@ jobs:
 
       - name: Leaderboard API
         run: |
-          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://freegamestore-leaderboard.serge-the-dev.workers.dev/scores/tetris?sort=top)
-          echo "leaderboard/scores/tetris → $STATUS"
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://freegamestore-leaderboard.serge-the-dev.workers.dev/api/leaderboard/tetris?limit=5')
+          echo "leaderboard/api/leaderboard/tetris → $STATUS"
           [ "$STATUS" = "200" ] || exit 1
 
       - name: Sample games (spot check 5)
