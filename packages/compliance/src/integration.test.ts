@@ -87,8 +87,15 @@ describe('failing-app fixture', () => {
     // After the mandate broadening, failing-app now also fails
     // PWA offline correctness (it ships web/index.html with no SW).
     // The remaining passes: no-scroll skips because it's not a game
-    // project, and audio-mute-respect passes because no raw audio.
-    expect(summary.pass.sort()).toEqual(['Audio respects platform mute', 'No scroll (games only)']);
+    // project, audio-mute-respect passes because no raw audio, and
+    // PWA maskable icon passes intentionally when no manifest exists
+    // at all (the PWA manifest check already fails loudly for that —
+    // don't double-report).
+    expect(summary.pass.sort()).toEqual([
+      'Audio respects platform mute',
+      'No scroll (games only)',
+      'PWA maskable icon',
+    ]);
   });
 });
 
