@@ -20,7 +20,12 @@ export {
   type GameButtonSize,
   type GameButtonVariant,
 } from './GameButton.js';
+export { GameConfirm, type GameConfirmProps } from './GameConfirm.js';
+export { GameModal, type GameModalProps } from './GameModal.js';
+export { GameOverScreen, type GameOverScreenProps } from './GameOverScreen.js';
 export { GameShell, type GameShellProps } from './GameShell.js';
+export { GameTextSizeToggle } from './GameTextSizeToggle.js';
+export { GameThemeToggle } from './GameThemeToggle.js';
 export {
   GameTopbar,
   type GameTopbarProps,

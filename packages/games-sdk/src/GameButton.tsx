@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 
-export type GameButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type GameButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type GameButtonSize = 'sm' | 'md' | 'lg';
 
 export interface GameButtonProps {
@@ -88,6 +88,10 @@ export function GameButton({
     ghost: {
       background: 'transparent',
       color: 'var(--muted, #6b7280)',
+    },
+    danger: {
+      background: '#dc2626',
+      color: '#ffffff',
     },
   };
 
