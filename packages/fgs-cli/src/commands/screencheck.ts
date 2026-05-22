@@ -6,6 +6,9 @@ import { createRequire } from 'node:module';
 import { extname, join, normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Command } from 'commander';
+import { computeCoverage, pickMatrix } from './screencheck-matrix.js';
+import type { ViewportTest } from './screencheck-matrix.js';
+import { renderCoverage, renderResult } from './screencheck-render.js';
 
 /**
  * Runtime viewport check: builds the app, serves the dist statically,
@@ -46,12 +49,6 @@ interface ClippingElement {
   clientH: number;
   clipsX: boolean;
   clipsY: boolean;
-}
-
-interface ViewportTest {
-  label: string;
-  width: number;
-  height: number;
 }
 
 interface MeasureResult {
@@ -248,122 +245,6 @@ export const screencheckCommand = new Command('screencheck')
     },
   );
 
-/**
- * The reference device matrix. Each entry pairs a width with a real-world
- * device class and the *cumulative device share* at that width — used to
- * answer "what % of users does this break for?". Numbers match the
- * storefront's viewport-coverage badge so the CLI and the badge agree.
- *
- * Cumulative means: `share` is the % of devices whose viewport is at
- * LEAST this wide. So 360px = 96% means 96% of devices have ≥360px
- * available; if the app fails at 360, you've lost those 96%.
- *
- * Source: blended StatCounter + caniuse share-of-screens, rounded.
- */
-const REFERENCE_PORTRAIT: Array<{ width: number; height: number; label: string; share: number }> = [
-  { width: 320, height: 568, label: 'iPhone SE (1st gen)', share: 99 },
-  { width: 360, height: 800, label: 'Android baseline', share: 96 },
-  { width: 414, height: 896, label: 'iPhone 11/Pro Max', share: 88 },
-  { width: 600, height: 800, label: 'Small tablet', share: 60 },
-  { width: 768, height: 1024, label: 'iPad portrait', share: 35 },
-  { width: 1024, height: 1366, label: 'iPad Pro portrait', share: 20 },
-];
-
-const REFERENCE_LANDSCAPE: Array<{ width: number; height: number; label: string; share: number }> =
-  [
-    { width: 568, height: 320, label: 'iPhone SE landscape', share: 99 },
-    { width: 667, height: 375, label: 'iPhone 8 landscape', share: 96 },
-    { width: 736, height: 414, label: 'iPhone Plus landscape', share: 88 },
-    { width: 800, height: 600, label: 'Small tablet landscape', share: 60 },
-    { width: 1024, height: 768, label: 'iPad landscape', share: 35 },
-    { width: 1366, height: 1024, label: 'iPad Pro landscape', share: 20 },
-  ];
-
-interface ViewportTestExpanded extends ViewportTest {
-  share: number;
-  orientation: 'portrait' | 'landscape';
-}
-
-/**
- * Pick the full reference matrix to test, gated by manifest orientation.
- * For orientation='any', test both. For 'portrait'/'landscape', test only
- * that side. Sizes below `minWidth` are still tested — failing below the
- * declared min is *expected*, but if it passes, the creator can claim a
- * wider device coverage than they declared.
- */
-export function pickTests(minWidth: number, orientation: string): ViewportTest[] {
-  return pickMatrix(minWidth, orientation).map(({ orientation: o, ...t }) => ({
-    label: t.label,
-    width: t.width,
-    height: t.height,
-  }));
-}
-
-export function pickMatrix(_minWidth: number, orientation: string): ViewportTestExpanded[] {
-  const isPortrait = orientation === 'portrait' || orientation === 'portrait-primary';
-  const isLandscape = orientation === 'landscape' || orientation === 'landscape-primary';
-  const isAny = orientation === 'any' || orientation === 'unspecified' || !orientation;
-  const matrix: ViewportTestExpanded[] = [];
-  if (isPortrait || isAny) {
-    for (const r of REFERENCE_PORTRAIT) {
-      matrix.push({
-        label: `portrait ${r.width}×${r.height} (${r.label})`,
-        width: r.width,
-        height: r.height,
-        share: r.share,
-        orientation: 'portrait',
-      });
-    }
-  }
-  if (isLandscape || isAny) {
-    for (const r of REFERENCE_LANDSCAPE) {
-      matrix.push({
-        label: `landscape ${r.width}×${r.height} (${r.label})`,
-        width: r.width,
-        height: r.height,
-        share: r.share,
-        orientation: 'landscape',
-      });
-    }
-  }
-  return matrix;
-}
-
-/**
- * Given the matrix and pass/fail per size, compute device coverage.
- * Coverage = max share among passing widths, per orientation.
- *
- * Why max(share): share is cumulative-from-this-width-up. The smallest
- * passing width has the highest share; passing larger widths is implied
- * by passing the smallest. We pick the lowest passing width's share.
- */
-export function computeCoverage(
-  matrix: ViewportTestExpanded[],
-  passing: Set<string>,
-): { portrait: number; landscape: number; overall: number; brokenSizes: ViewportTestExpanded[] } {
-  let portrait = 0;
-  let landscape = 0;
-  const broken: ViewportTestExpanded[] = [];
-  for (const t of matrix) {
-    if (passing.has(t.label)) {
-      if (t.orientation === 'portrait') portrait = Math.max(portrait, t.share);
-      else landscape = Math.max(landscape, t.share);
-    } else {
-      broken.push(t);
-    }
-  }
-  // For 'any' orientation, the user needs BOTH to work, so coverage is
-  // the lower of the two. For one-orientation apps, only that side
-  // matters.
-  const hasPortrait = matrix.some((t) => t.orientation === 'portrait');
-  const hasLandscape = matrix.some((t) => t.orientation === 'landscape');
-  let overall = 0;
-  if (hasPortrait && hasLandscape) overall = Math.min(portrait, landscape);
-  else if (hasPortrait) overall = portrait;
-  else overall = landscape;
-  return { portrait, landscape, overall, brokenSizes: broken };
-}
-
 async function measure(
   browser: { newPage: (opts: unknown) => Promise<unknown> },
   url: string,
@@ -449,73 +330,6 @@ async function measure(
     scrollsY: dim.scrollHeight > dim.clientHeight + TOLERANCE,
     clippingElements: dim.clipping,
   };
-}
-
-function renderCoverage(
-  cov: {
-    portrait: number;
-    landscape: number;
-    overall: number;
-    brokenSizes: ViewportTestExpanded[];
-  },
-  matrix: ViewportTestExpanded[],
-): void {
-  const isTTY = Boolean(process.stdout.isTTY) && process.env.NO_COLOR !== '1';
-  const c = (open: string) => (s: string) => (isTTY ? `\x1b[${open}m${s}\x1b[39m` : s);
-  const ok = c('32');
-  const warn = c('33');
-  const bad = c('31');
-  const colorize = (pct: number): ((s: string) => string) =>
-    pct >= 95 ? ok : pct >= 80 ? warn : bad;
-
-  const hasPortrait = matrix.some((t) => t.orientation === 'portrait');
-  const hasLandscape = matrix.some((t) => t.orientation === 'landscape');
-  process.stdout.write('Device coverage:\n');
-  if (hasPortrait) {
-    process.stdout.write(
-      `  portrait:  ${colorize(cov.portrait)(`~${cov.portrait}%`)} of devices\n`,
-    );
-  }
-  if (hasLandscape) {
-    process.stdout.write(
-      `  landscape: ${colorize(cov.landscape)(`~${cov.landscape}%`)} of devices\n`,
-    );
-  }
-  if (hasPortrait && hasLandscape) {
-    process.stdout.write(
-      `  overall:   ${colorize(cov.overall)(`~${cov.overall}%`)} (worst-case across orientations)\n`,
-    );
-  }
-}
-
-function renderResult(r: MeasureResult): void {
-  const isTTY = Boolean(process.stdout.isTTY) && process.env.NO_COLOR !== '1';
-  const c = (open: string) => (s: string) => (isTTY ? `\x1b[${open}m${s}\x1b[39m` : s);
-  const ok = c('32');
-  const bad = c('31');
-  const dim = (s: string) => (isTTY ? `\x1b[2m${s}\x1b[22m` : s);
-
-  const hasIssue = r.scrollsX || r.scrollsY || r.clippingElements.length > 0;
-  if (!hasIssue) {
-    process.stdout.write(`  ${ok('✓')} ${r.label.padEnd(40)} ${dim(`fits cleanly`)}\n`);
-    return;
-  }
-  const issues: string[] = [];
-  if (r.scrollsX) issues.push(`scrolls horizontally (${r.scrollWidth}px > ${r.width}px)`);
-  if (r.scrollsY) issues.push(`scrolls vertically (${r.scrollHeight}px > ${r.height}px)`);
-  if (r.clippingElements.length > 0) {
-    issues.push(`${r.clippingElements.length} element(s) clip content`);
-  }
-  process.stdout.write(`  ${bad('✗')} ${r.label.padEnd(40)} ${dim(issues.join(' · '))}\n`);
-  // Show the worst clipping offenders. Cap at 3 per viewport to keep
-  // output readable; the screenshot is the receipt for the rest.
-  for (const el of r.clippingElements.slice(0, 3)) {
-    const sel = el.id ? `#${el.id}` : el.cls ? `.${el.cls.split(/\s+/)[0]}` : '';
-    const detail: string[] = [];
-    if (el.clipsX) detail.push(`x:${el.scrollW}>${el.clientW}`);
-    if (el.clipsY) detail.push(`y:${el.scrollH}>${el.clientH}`);
-    process.stdout.write(`      ${dim(`<${el.tag}${sel}>`)} ${dim(detail.join(' '))}\n`);
-  }
 }
 
 async function readManifest(dir: string): Promise<Record<string, unknown> | null> {
