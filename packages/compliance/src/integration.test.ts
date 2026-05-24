@@ -64,11 +64,11 @@ describe('failing-app fixture', () => {
     // dropped or renamed checks. Detail/suggestion text is covered by
     // the snapshot test below.
     expect(summary.fail.sort()).toEqual([
+      'Analytics routed through platform loader',
       'Brand fonts present',
       'Brand tokens defined',
       'HTML meta tags',
       'MIT License',
-      'Analytics routed through platform loader',
       'No .env.production',
       'No brand overrides',
       'No template placeholders',

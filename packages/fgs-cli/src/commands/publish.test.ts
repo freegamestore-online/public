@@ -93,11 +93,11 @@ describe('buildSubmissionUrl', () => {
 
 describe('resolveCategory', () => {
   it('matches exact label', () => {
-    expect(resolveCategory('Productivity')).toBe('Productivity');
+    expect(resolveCategory('Arcade')).toBe('Arcade');
   });
   it('matches case-insensitive', () => {
-    expect(resolveCategory('utilities')).toBe('Utilities');
-    expect(resolveCategory('UTILITIES')).toBe('Utilities');
+    expect(resolveCategory('arcade')).toBe('Arcade');
+    expect(resolveCategory('STRATEGY')).toBe('Strategy');
     expect(resolveCategory('  Brain Training  ')).toBe('Brain Training');
   });
   it('matches "other" short form', () => {
@@ -133,14 +133,14 @@ describe('resolveFromFlags', () => {
   it('resolves valid combinations', () => {
     const r = resolveFromFlags({
       name: 'my-app',
-      category: 'utilities',
+      category: 'arcade',
       type: 'standalone',
       oneliner: 'Does a thing',
       demo: 'https://demo.example',
     });
     expect(r.errors).toEqual([]);
     expect(r.values.name).toBe('my-app');
-    expect(r.values.category).toBe('Utilities');
+    expect(r.values.category).toBe('Arcade');
     expect(r.values.type).toBe('Standalone (no backend, localStorage only)');
     expect(r.values.oneliner).toBe('Does a thing');
     expect(r.values.demo).toBe('https://demo.example');

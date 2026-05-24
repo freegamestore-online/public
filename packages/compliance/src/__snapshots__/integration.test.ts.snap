@@ -3,6 +3,15 @@
 exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
 [
   {
+    "detail": "1 file(s) install trackers directly: web/src/tracking.ts (amplitude)",
+    "name": "Analytics routed through platform loader",
+    "status": "fail",
+    "suggestions": [
+      "Remove the direct SDK and reference the platform loader instead: <script src="https://api.freeappstore.online/v1/analytics.js?app=<id>" defer></script>.",
+      "Configure providers (GA4, Plausible, custom <head>) via PUT /v1/apps/<id>/analytics — the loader emits the right tags so policy can evolve without redeploying every app.",
+    ],
+  },
+  {
     "detail": "no raw audio APIs in use",
     "name": "Audio respects platform mute",
     "status": "pass",
@@ -98,15 +107,6 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "suggestions": [
       "Run \`fas init <id>\` instead of cloning the template manually — it does the substitution.",
       "Or do a project-wide find/replace: APPNAME → your app id (lowercase, hyphenated).",
-    ],
-  },
-  {
-    "detail": "1 file(s) install trackers directly: web/src/tracking.ts (amplitude)",
-    "name": "Analytics routed through platform loader",
-    "status": "fail",
-    "suggestions": [
-      "Remove the direct SDK and reference the platform loader instead: <script src=\"https://api.freeappstore.online/v1/analytics.js?app=<id>\" defer></script>.",
-      "Configure providers (GA4, Plausible, custom <head>) via PUT /v1/apps/<id>/analytics — the loader emits the right tags so policy can evolve without redeploying every app.",
     ],
   },
   {
