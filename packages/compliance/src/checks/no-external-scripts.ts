@@ -11,7 +11,6 @@ const ALLOWED_DOMAINS = new Set([
   'fonts.gstatic.com',
   'static.cloudflareinsights.com',
   'freegamestore.online',
-  'freeappstore.online',
 ]);
 
 /**
@@ -20,8 +19,8 @@ const ALLOWED_DOMAINS = new Set([
  * inside `web/index.html`.
  *
  * Allowed: fonts.googleapis.com, fonts.gstatic.com,
- * static.cloudflareinsights.com, freegamestore.online,
- * freeappstore.online. Everything else fails.
+ * static.cloudflareinsights.com, freegamestore.online.
+ * Everything else fails.
  *
  * HTML comments are stripped first so `<!-- <script src="..."> -->` blocks
  * don't trigger false positives.

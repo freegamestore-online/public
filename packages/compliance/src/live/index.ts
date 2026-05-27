@@ -35,7 +35,7 @@ const TRACKER_PATTERNS = [
 
 export interface LiveAuditInput {
   appId: string;
-  liveUrl: string; // e.g. https://tip.freeappstore.online
+  liveUrl: string; // e.g. https://tetris.freegamestore.online
 }
 
 export interface LiveAuditReport {
@@ -146,7 +146,7 @@ export function checkNoTrackingLive(html: string): CheckResult {
     status: 'fail',
     detail: `${found.length} direct-tracker pattern${found.length === 1 ? '' : 's'} matched`,
     suggestions: [
-      'Replace the direct SDK with the platform loader: <script src="https://api.freeappstore.online/v1/analytics.js?app=<id>" defer></script>.',
+      'Replace the direct SDK with the platform loader: <script src="https://api.freegamestore.online/v1/analytics.js?app=<id>" defer></script>.',
       'Configure providers via PUT /v1/apps/<id>/analytics so policy can evolve without a redeploy.',
     ],
   };

@@ -4,7 +4,9 @@ import { checkBrandTokens } from './checks/brand-tokens.js';
 import { checkBundleSize } from './checks/bundle-size.js';
 import { checkClaudeMdSlim } from './checks/claude-md-slim.js';
 import { checkDarkMode } from './checks/dark-mode.js';
+import { checkDeployWorkflow } from './checks/deploy-workflow.js';
 import { checkGameNaming } from './checks/game-naming.js';
+import { checkGitignoreComplete } from './checks/gitignore-complete.js';
 import { checkHtmlMeta } from './checks/html-meta.js';
 import { checkLicenseMit } from './checks/license-mit.js';
 import { checkManifest } from './checks/manifest.js';
@@ -14,7 +16,10 @@ import { checkNoBrandOverrides } from './checks/no-brand-overrides.js';
 import { checkNoConsoleLog } from './checks/no-console-log.js';
 import { checkNoCookies } from './checks/no-cookies.js';
 import { checkNoEnvProduction } from './checks/no-env-production.js';
+import { checkNoExcessiveInlineStyles } from './checks/no-excessive-inline-styles.js';
+import { checkNoExternalFetch } from './checks/no-external-fetch.js';
 import { checkNoExternalScripts } from './checks/no-external-scripts.js';
+import { checkNoHardcodedColors } from './checks/no-hardcoded-colors.js';
 import { checkNoPaymentSdk } from './checks/no-payment-sdk.js';
 import { checkNoPlaceholders } from './checks/no-placeholders.js';
 import { checkNoScroll } from './checks/no-scroll.js';
@@ -22,6 +27,7 @@ import { checkNoTracking } from './checks/no-tracking.js';
 import { checkPwaIcons } from './checks/pwa-icons.js';
 import { checkPwaMeta } from './checks/pwa-meta.js';
 import { checkPwaOffline } from './checks/pwa-offline.js';
+import { checkReactStrictMode } from './checks/react-strict-mode.js';
 import { checkSdkVersion } from './checks/sdk-version.js';
 import { checkStoreLink } from './checks/store-link.js';
 import { checkTechVersions } from './checks/tech-versions.js';
@@ -55,7 +61,9 @@ export {
   checkBundleSize,
   checkClaudeMdSlim,
   checkDarkMode,
+  checkDeployWorkflow,
   checkGameNaming,
+  checkGitignoreComplete,
   checkHtmlMeta,
   checkLicenseMit,
   checkManifest,
@@ -65,7 +73,10 @@ export {
   checkNoConsoleLog,
   checkNoCookies,
   checkNoEnvProduction,
+  checkNoExcessiveInlineStyles,
+  checkNoExternalFetch,
   checkNoExternalScripts,
+  checkNoHardcodedColors,
   checkNoPaymentSdk,
   checkNoPlaceholders,
   checkNoScroll,
@@ -73,6 +84,7 @@ export {
   checkPwaIcons,
   checkPwaMeta,
   checkPwaOffline,
+  checkReactStrictMode,
   checkSdkVersion,
   checkStoreLink,
   checkTechVersions,
@@ -113,6 +125,7 @@ async function runChecksOn(source: FileSource): Promise<CheckResult[]> {
     checkNoPaymentSdk(source),
     checkNoCookies(source),
     checkNoExternalScripts(source),
+    checkNoExternalFetch(source),
     // Brand & design
     checkAudioMuteRespect(source),
     checkBrandFonts(source),
@@ -143,5 +156,10 @@ async function runChecksOn(source: FileSource): Promise<CheckResult[]> {
     checkNoConsoleLog(source),
     checkUsesLocalStorage(source),
     checkGameNaming(source),
+    checkNoHardcodedColors(source),
+    checkNoExcessiveInlineStyles(source),
+    checkDeployWorkflow(source),
+    checkGitignoreComplete(source),
+    checkReactStrictMode(source),
   ]);
 }

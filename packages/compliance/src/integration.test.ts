@@ -52,7 +52,7 @@ describe('passing-app fixture', () => {
 
   it('warns only on bundle-size (no dist built)', async () => {
     const results = await runChecks(PASSING_APP);
-    expect(summarise(results).warn.sort()).toEqual(['Bundle size']);
+    expect(summarise(results).warn).toEqual(['Bundle size']);
   });
 });
 
@@ -83,6 +83,8 @@ describe('failing-app fixture', () => {
       'Bundle size',
       'CLAUDE.md is slim (no platform boilerplate)',
       'Dark mode support',
+      'Deploy workflow',
+      'Gitignore complete',
       'Local storage for progress/scores',
       'No console.log',
       'No unsafe 100vh',
@@ -95,11 +97,15 @@ describe('failing-app fixture', () => {
       'Game naming conventions',
       'Games SDK version',
       'No cookies',
+      'No excessive inline styles',
       'No explicit any types',
+      'No external fetch',
       'No external scripts',
+      'No hardcoded colors',
       'No payment SDKs',
       'No scroll (games only)',
       'PWA maskable icon',
+      'React StrictMode',
     ]);
   });
 });

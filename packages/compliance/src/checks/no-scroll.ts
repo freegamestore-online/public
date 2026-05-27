@@ -105,7 +105,7 @@ const FORBIDDEN_OVERFLOW = [
 
 const FORBIDDEN_MIN_HEIGHT = [/(?:^|[\s,{])(?:html|body)\s*\{[^}]*min-height\s*:\s*100vh/im];
 
-const VIEWPORT_LOCK = /(?:height|max-height)\s*:\s*100(?:s?vh)|GameShell|@freeappstore\/games/i;
+const VIEWPORT_LOCK = /(?:height|max-height)\s*:\s*100(?:s?vh)|GameShell|@freegamestore\/games/i;
 
 function extOf(path: string): string {
   const dot = path.lastIndexOf('.');

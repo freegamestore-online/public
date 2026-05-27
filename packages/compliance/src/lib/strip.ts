@@ -143,15 +143,15 @@ function stripCode(src: string, opts: { strings: boolean }): string {
       blank(out, start, i);
       continue;
     }
-    if (opts.strings && (c === '"' || c === "'" || c === '`')) {
+    if (c === '"' || c === "'" || c === '`') {
       const quote = c;
-      const start = i + 1; // keep the opening quote in place
+      const start = i + 1;
       i++;
       while (i < src.length && src[i] !== quote) {
         if (src[i] === '\\' && i + 1 < src.length) i++;
         i++;
       }
-      blank(out, start, i);
+      if (opts.strings) blank(out, start, i);
       i++; // skip closing quote
       continue;
     }

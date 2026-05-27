@@ -7,7 +7,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "name": "Analytics routed through platform loader",
     "status": "fail",
     "suggestions": [
-      "Remove the direct SDK and reference the platform loader instead: <script src="https://api.freeappstore.online/v1/analytics.js?app=<id>" defer></script>.",
+      "Remove the direct SDK and reference the platform loader instead: <script src="https://api.freegamestore.online/v1/analytics.js?app=<id>" defer></script>.",
       "Configure providers (GA4, Plausible, custom <head>) via PUT /v1/apps/<id>/analytics — the loader emits the right tags so policy can evolve without redeploying every app.",
     ],
   },
@@ -59,6 +59,15 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     ],
   },
   {
+    "detail": ".github/workflows/deploy.yml not found",
+    "name": "Deploy workflow",
+    "status": "warn",
+    "suggestions": [
+      "Add a deploy workflow so pushes to main auto-deploy to the storefront.",
+      "Run \`fgs create\` to scaffold a game with the standard deploy workflow, or copy one from an existing game repo.",
+    ],
+  },
+  {
     "detail": "package names follow platform naming conventions",
     "name": "Game naming conventions",
     "status": "pass",
@@ -67,6 +76,15 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "detail": "web/package.json not found — deferring to uses-game-sdk check",
     "name": "Games SDK version",
     "status": "pass",
+  },
+  {
+    "detail": "no .gitignore file at repo root",
+    "name": "Gitignore complete",
+    "status": "warn",
+    "suggestions": [
+      "Add a .gitignore that covers at least: node_modules, dist, .env.",
+      "Run \`fgs create\` to scaffold a game with a standard .gitignore.",
+    ],
   },
   {
     "detail": "missing: lang attribute on <html>, viewport meta, non-empty <title>",
@@ -129,13 +147,28 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "status": "pass",
   },
   {
+    "detail": "0 inline style(s) across 0 TSX file(s) (thresholds: 15/file, 30 total)",
+    "name": "No excessive inline styles",
+    "status": "pass",
+  },
+  {
     "detail": "no \`: any\` or \`as any\` found in web/src/",
     "name": "No explicit any types",
     "status": "pass",
   },
   {
+    "detail": "no fetch() or XMLHttpRequest calls to external domains in web/src/",
+    "name": "No external fetch",
+    "status": "pass",
+  },
+  {
     "detail": "no disallowed external script sources in index.html",
     "name": "No external scripts",
+    "status": "pass",
+  },
+  {
+    "detail": "0 hex color(s) in TSX files (threshold: 10)",
+    "name": "No hardcoded colors",
     "status": "pass",
   },
   {
@@ -206,6 +239,11 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
       "Add \`vite-plugin-pwa\` to web/devDependencies, then wire \`VitePWA({...})\` into vite.config.ts plugins. Mirror the canonical config used in bowling, 2048, snake, etc.",
       "Or, if you prefer to manage your own SW, register it from web/src/main.tsx with \`navigator.serviceWorker.register("/sw.js")\` and ship the SW yourself.",
     ],
+  },
+  {
+    "detail": "no web/src/main.tsx found (not a React project)",
+    "name": "React StrictMode",
+    "status": "pass",
   },
   {
     "detail": "no link to freegamestore.online found in web/src/",

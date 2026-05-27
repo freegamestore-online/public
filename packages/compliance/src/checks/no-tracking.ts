@@ -100,7 +100,7 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
     return {
       name: 'Analytics routed through platform loader',
       status: 'pass',
-      detail: `no direct tracker SDKs found; analytics, if any, must flow through the platform loader (api.freeappstore.online/v1/analytics.js?app=<id>)`,
+      detail: `no direct tracker SDKs found; analytics, if any, must flow through the platform loader (api.freegamestore.online/v1/analytics.js?app=<id>)`,
     };
   }
 
@@ -112,7 +112,7 @@ export async function checkNoTracking(source: FileSource): Promise<CheckResult> 
       .map((h) => `${h.file} (${h.matches.join(', ')})`)
       .join('; ')}${hits.length > 3 ? '…' : ''}`,
     suggestions: [
-      'Remove the direct SDK and reference the platform loader instead: <script src="https://api.freeappstore.online/v1/analytics.js?app=<id>" defer></script>.',
+      'Remove the direct SDK and reference the platform loader instead: <script src="https://api.freegamestore.online/v1/analytics.js?app=<id>" defer></script>.',
       'Configure providers (GA4, Plausible, custom <head>) via PUT /v1/apps/<id>/analytics — the loader emits the right tags so policy can evolve without redeploying every app.',
     ],
   };
