@@ -90,7 +90,7 @@ export function renderCheckResults(results: CheckResult[]): CheckSummary {
 }
 
 export const checkCommand = new Command('check')
-  .description('Run FreeAppStore compliance checks against the current directory.')
+  .description('Run FreeGameStore compliance checks against the current directory.')
   .option('--dir <path>', 'Directory to check', process.cwd())
   .action(async (opts: { dir: string }) => {
     const root = findGameRoot(opts.dir);
