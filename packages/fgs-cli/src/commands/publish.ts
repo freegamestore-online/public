@@ -227,7 +227,7 @@ async function tryAutoProvision(input: SubmissionInput): Promise<AutoProvisionRe
   if (!sessionToken) return { kind: 'unauthorized', reason: 'no session' };
 
   const typeShort = input.type.startsWith('Standalone') ? 'standalone' : 'connected';
-  const res = await fetch(`${config.apiBase}/v1/publish`, {
+  const res = await fetch(`${config.apiBase}/api/provision`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${sessionToken}`,

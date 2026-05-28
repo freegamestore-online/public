@@ -19,7 +19,10 @@ export interface FgsConfig {
 }
 
 const DEFAULT_CONFIG: FgsConfig = {
-  apiBase: process.env.FGS_API_BASE ?? 'https://api.freegamestore.online',
+  // The FGS admin Worker (auth exchange + provision) lives at
+  // admin.freegamestore.online. `api.freegamestore.online` was never wired
+  // (530). Points here so `fgs login` + `fgs publish` reach the admin.
+  apiBase: process.env.FGS_API_BASE ?? 'https://admin.freegamestore.online',
 };
 
 export function normalizeApiBase(s: string): string {
