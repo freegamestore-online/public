@@ -112,9 +112,7 @@ export async function checkTypescriptStrict(source: FileSource): Promise<CheckRe
   };
 }
 
-function hasAllStrictFlags(
-  compilerOptions: Record<string, unknown> | undefined,
-): boolean {
+function hasAllStrictFlags(compilerOptions: Record<string, unknown> | undefined): boolean {
   if (!compilerOptions) return false;
   return STRICT_FLAGS.every((flag) => compilerOptions[flag] === true);
 }
