@@ -64,7 +64,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "status": "warn",
     "suggestions": [
       "Add a deploy workflow so pushes to main auto-deploy to the storefront.",
-      "Run \`fgs create\` to scaffold a game with the standard deploy workflow, or copy one from an existing game repo.",
+      "Run \`fgs init\` to scaffold a game with the standard deploy workflow, or copy one from an existing game repo.",
     ],
   },
   {
@@ -83,7 +83,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "status": "warn",
     "suggestions": [
       "Add a .gitignore that covers at least: node_modules, dist, .env.",
-      "Run \`fgs create\` to scaffold a game with a standard .gitignore.",
+      "Run \`fgs init\` to scaffold a game with a standard .gitignore.",
     ],
   },
   {
@@ -265,7 +265,7 @@ exports[`failing-app snapshot > matches snapshot for full result shape 1`] = `
     "status": "fail",
     "suggestions": [
       "Create a tsconfig.json in web/ with \`"strict": true\` in compilerOptions.",
-      "The game template includes a pre-configured tsconfig — run \`fgs create\` to scaffold one.",
+      "The game template includes a pre-configured tsconfig — run \`fgs init\` to scaffold one.",
     ],
   },
   {
