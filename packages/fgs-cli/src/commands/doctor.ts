@@ -1,7 +1,7 @@
 import { Command } from 'commander';
-import { type CheckResult, runDoctor } from '../one-shot/doctor.js';
+import { type DoctorCheckResult, runDoctor } from '../one-shot/doctor.js';
 
-const ICON: Record<CheckResult['status'], string> = {
+const ICON: Record<DoctorCheckResult['status'], string> = {
   pass: '✓',
   warn: '!',
   fail: '✗',
@@ -15,7 +15,7 @@ const yellow = c('33');
 const red = c('31');
 const dim = (s: string) => (isTTY ? `\x1b[2m${s}\x1b[22m` : s);
 
-const COLOR: Record<CheckResult['status'], (s: string) => string> = {
+const COLOR: Record<DoctorCheckResult['status'], (s: string) => string> = {
   pass: green,
   warn: yellow,
   fail: red,

@@ -4,11 +4,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readConfig } from '../lib/config.js';
 
-export type CheckStatus = 'pass' | 'fail' | 'warn';
+export type DoctorCheckStatus = 'pass' | 'fail' | 'warn';
 
-export interface CheckResult {
+export interface DoctorCheckResult {
   name: string;
-  status: CheckStatus;
+  status: DoctorCheckStatus;
   detail: string;
 }
 
@@ -17,7 +17,7 @@ export interface CheckResult {
  * Returns the full result list. The CLI's `fas doctor` and the TUI's
  * Doctor screen both render this same data.
  */
-export async function runDoctor(): Promise<CheckResult[]> {
+export async function runDoctor(): Promise<DoctorCheckResult[]> {
   const checks = await Promise.all([
     checkNodeVersion(),
     checkBinary('git'),
@@ -29,7 +29,7 @@ export async function runDoctor(): Promise<CheckResult[]> {
   return checks;
 }
 
-async function checkNodeVersion(): Promise<CheckResult> {
+async function checkNodeVersion(): Promise<DoctorCheckResult> {
   const v = process.versions.node;
   const major = Number(v.split('.')[0]);
   if (Number.isNaN(major)) {
@@ -45,14 +45,14 @@ async function checkNodeVersion(): Promise<CheckResult> {
   return { name: 'Node version', status: 'pass', detail: v };
 }
 
-async function checkBinary(name: string): Promise<CheckResult> {
+async function checkBinary(name: string): Promise<DoctorCheckResult> {
   const found = await which(name);
   return found
     ? { name: `${name} installed`, status: 'pass', detail: found }
     : { name: `${name} installed`, status: 'fail', detail: `${name} not on PATH` };
 }
 
-async function checkConfigFile(): Promise<CheckResult> {
+async function checkConfigFile(): Promise<DoctorCheckResult> {
   const path = join(homedir(), '.fas', 'config.json');
   try {
     const raw = await readFile(path, 'utf8');
@@ -71,7 +71,7 @@ async function checkConfigFile(): Promise<CheckResult> {
   }
 }
 
-async function checkSignedIn(): Promise<CheckResult> {
+async function checkSignedIn(): Promise<DoctorCheckResult> {
   try {
     const config = await readConfig();
     if (!config.session?.token) {
@@ -94,7 +94,7 @@ async function checkSignedIn(): Promise<CheckResult> {
   }
 }
 
-async function checkApiReachable(): Promise<CheckResult> {
+async function checkApiReachable(): Promise<DoctorCheckResult> {
   try {
     const config = await readConfig();
     const started = Date.now();

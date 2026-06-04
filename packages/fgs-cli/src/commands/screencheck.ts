@@ -255,7 +255,9 @@ async function measure(
   // and don't want to take a Playwright type dep at module load time.
   const page = (await browser.newPage({ viewport: { width: t.width, height: t.height } })) as {
     goto: (u: string, o?: unknown) => Promise<unknown>;
-    evaluate: <T>(fn: () => T) => Promise<T>;
+    // Real Playwright accepts a function or a string expression; we use the
+    // string form for browser-global code so TS doesn't type-check `document`.
+    evaluate: <T>(fn: (() => T) | string) => Promise<T>;
     screenshot: (opts: { path: string; fullPage?: boolean }) => Promise<unknown>;
     close: () => Promise<void>;
   };
@@ -268,8 +270,17 @@ async function measure(
   // the common case where a layout uses `overflow:hidden` on a parent
   // to mask an oversized child — visually content is cropped, but the
   // document doesn't scroll, so a naive scrollWidth check passes.
-  const dim = await page.evaluate(
-    new Function(`
+  // Passed as a string (not a function literal) so TS doesn't type-check
+  // browser globals like `document`/`getComputedStyle`. Playwright evaluates
+  // the string as an expression in the page — no `new Function`/eval in Node.
+  const dim = await page.evaluate<{
+    scrollWidth: number;
+    scrollHeight: number;
+    clientWidth: number;
+    clientHeight: number;
+    clipping: ClippingElement[];
+  }>(`
+    (() => {
       const root = document.documentElement;
       const TOL = 1;
       const clipping = [];
@@ -302,14 +313,8 @@ async function measure(
         clientHeight: root.clientHeight,
         clipping: clipping,
       };
-    `) as () => {
-      scrollWidth: number;
-      scrollHeight: number;
-      clientWidth: number;
-      clientHeight: number;
-      clipping: ClippingElement[];
-    },
-  );
+    })()
+  `);
 
   if (shotsDir) {
     const safe = t.label.replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
