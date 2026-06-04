@@ -17,7 +17,8 @@ export function useAuth(): {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('https://auth.freegamestore.online/me', { credentials: 'include' })
+    // Fire-and-forget with terminal .catch/.finally; `void` marks the non-await.
+    void fetch('https://auth.freegamestore.online/me', { credentials: 'include' })
       .then((res) => {
         if (!cancelled && res.ok) return res.json();
         return null;
@@ -41,7 +42,7 @@ export function useAuth(): {
   }, []);
 
   const signOut = useCallback(() => {
-    fetch('https://auth.freegamestore.online/logout', {
+    void fetch('https://auth.freegamestore.online/logout', {
       method: 'POST',
       credentials: 'include',
     })

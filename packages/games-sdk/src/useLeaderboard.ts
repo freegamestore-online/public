@@ -40,7 +40,9 @@ export function useLeaderboard(gameId: string): {
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([
+    // Fire-and-forget: inner fetches each .catch() to [], so this never
+    // rejects; `void` marks the intentional non-await.
+    void Promise.all([
       fetch(`${API_BASE}/api/leaderboard/${gameId}?limit=50`, { credentials: 'include' })
         .then(async (r) => {
           if (!r.ok) return [] as LeaderboardEntry[];

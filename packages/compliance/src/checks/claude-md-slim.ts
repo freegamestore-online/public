@@ -44,7 +44,7 @@ const SOFT_LINE_LIMIT = 60;
 
 export async function checkClaudeMdSlim(source: FileSource): Promise<CheckResult> {
   const body = await source.read('CLAUDE.md');
-  if (body == null) {
+  if (body === null) {
     // No CLAUDE.md is fine — agents fall back to SKILLS.md via README/docs.
     return { name: NAME, status: 'pass', detail: 'no CLAUDE.md present' };
   }
