@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const API_BASE = 'https://freegamestore-leaderboard.serge-the-dev.workers.dev';
+const API_BASE = 'https://leaderboard.freegamestore.online';
 
 export interface LeaderboardEntry {
   player_name: string;
