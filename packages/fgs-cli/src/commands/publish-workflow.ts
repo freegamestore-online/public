@@ -13,7 +13,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Compliance GATE: deploy only runs if this passes. Games are untrusted user
+  # content; these block the unambiguous policy violations (external scripts,
+  # tracking SDKs) before anything reaches R2. Runtime egress is further
+  # constrained by the freegamestore-host CSP.
+  compliance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: No external <script src> (games must be self-contained)
+        run: |
+          if grep -rhiE '<script[^>]*src=[^>]*https?://' web/*.html 2>/dev/null \\
+             | grep -viE 'freegamestore\\.online|cloudflareinsights\\.com|googletagmanager\\.com|plausible\\.io'; then
+            echo "::error::external <script src> is not allowed in a published game"; exit 1
+          fi
+      - name: No tracking SDKs in source
+        run: |
+          if grep -rE 'google-analytics|gtag\\(|amplitude|mixpanel|segment|hotjar|plausible|posthog' web/src/ 2>/dev/null; then
+            echo "::error::tracking SDK found in web/src — analytics is platform-provided"; exit 1
+          fi
+
   deploy:
+    needs: compliance
     runs-on: ubuntu-latest
     permissions:
       contents: read
