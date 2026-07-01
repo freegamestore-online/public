@@ -45,8 +45,13 @@ export function useLeaderboard(gameId: string): {
   // per-effect cancelled flag.
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
+  // Sequences concurrent load()s so a slower earlier response can't overwrite a
+  // newer one (e.g. gameId change, or refresh racing submitScore's reload) —
+  // otherwise the wrong game's / stale scores can win.
+  const reqId = useRef(0);
 
   const load = useCallback(() => {
+    const id = ++reqId.current;
     setLoading(true);
     // Fire-and-forget: inner fetches each .catch() to [], so this never
     // rejects; `void` marks the intentional non-await.
@@ -68,7 +73,8 @@ export function useLeaderboard(gameId: string): {
         })
         .catch(() => [] as LeaderboardEntry[]),
     ]).then(([top, recent]) => {
-      if (!mountedRef.current) return;
+      // Ignore a stale response that a newer load() has superseded.
+      if (!mountedRef.current || id !== reqId.current) return;
       setTopScores(top);
       setRecentScores(recent);
       setLoading(false);

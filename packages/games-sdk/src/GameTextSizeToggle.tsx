@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const KEY = 'stores-text-size';
 type Size = 'default' | 'lg' | 'sm';
@@ -26,6 +26,10 @@ function apply(size: Size) {
  */
 export function GameTextSizeToggle() {
   const [size, setSize] = useState<Size>(getSize);
+
+  // Apply the stored size to the DOM on mount — otherwise the saved preference
+  // is silently dropped on every reload (apply() only ran inside cycle()).
+  useEffect(() => { apply(size); }, []);
 
   const cycle = useCallback(() => {
     const order: Size[] = ['default', 'lg', 'sm'];

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const THEME_KEY = 'stores-theme';
 type Pref = 'system' | 'light' | 'dark';
@@ -35,6 +35,10 @@ function apply(pref: Pref) {
 export function GameThemeToggle() {
   const [pref, setPref] = useState<Pref>(getStoredPref);
   const theme = resolve(pref);
+
+  // Apply the stored preference to the DOM on mount — otherwise a saved theme is
+  // silently dropped on every reload (apply() only ran inside cycle()).
+  useEffect(() => { apply(pref); }, []);
 
   const cycle = useCallback(() => {
     const order: Pref[] = ['system', 'light', 'dark'];
