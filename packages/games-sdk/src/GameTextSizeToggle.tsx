@@ -27,15 +27,16 @@ function apply(size: Size) {
 export function GameTextSizeToggle() {
   const [size, setSize] = useState<Size>(getSize);
 
-  // Apply the stored size to the DOM on mount — otherwise the saved preference
-  // is silently dropped on every reload (apply() only ran inside cycle()).
-  useEffect(() => { apply(size); }, []);
+  // Keep the DOM in sync with the size — on mount (so a saved size is applied on
+  // reload, not just when cycled) and on every change.
+  useEffect(() => {
+    apply(size);
+  }, [size]);
 
   const cycle = useCallback(() => {
     const order: Size[] = ['default', 'lg', 'sm'];
     const next = order[(order.indexOf(size) + 1) % order.length]!;
-    setSize(next);
-    apply(next);
+    setSize(next); // the effect applies it
   }, [size]);
 
   const label = size === 'lg' ? 'A+' : size === 'sm' ? 'A\u2212' : 'A';

@@ -36,15 +36,16 @@ export function GameThemeToggle() {
   const [pref, setPref] = useState<Pref>(getStoredPref);
   const theme = resolve(pref);
 
-  // Apply the stored preference to the DOM on mount — otherwise a saved theme is
-  // silently dropped on every reload (apply() only ran inside cycle()).
-  useEffect(() => { apply(pref); }, []);
+  // Keep the DOM in sync with the preference — on mount (so a saved theme is
+  // applied on reload, not just when cycled) and on every change.
+  useEffect(() => {
+    apply(pref);
+  }, [pref]);
 
   const cycle = useCallback(() => {
     const order: Pref[] = ['system', 'light', 'dark'];
     const next = order[(order.indexOf(pref) + 1) % order.length]!;
-    setPref(next);
-    apply(next);
+    setPref(next); // the effect applies it
   }, [pref]);
 
   return (

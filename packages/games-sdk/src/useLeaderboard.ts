@@ -44,7 +44,12 @@ export function useLeaderboard(gameId: string): {
   // mount effect and from submitScore(); a ref covers every caller, unlike a
   // per-effect cancelled flag.
   const mountedRef = useRef(true);
-  useEffect(() => () => { mountedRef.current = false; }, []);
+  useEffect(
+    () => () => {
+      mountedRef.current = false;
+    },
+    [],
+  );
   // Sequences concurrent load()s so a slower earlier response can't overwrite a
   // newer one (e.g. gameId change, or refresh racing submitScore's reload) —
   // otherwise the wrong game's / stale scores can win.
