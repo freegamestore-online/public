@@ -69,11 +69,16 @@ Clean cut: archive each standalone repo after its monorepo deploy verifies.
   pre-SDK `leaderboard/client/{useLeaderboard.ts,Leaderboard.tsx}` (dead workers.dev URL
   + anonymous-submit model the Worker now 401s) were deleted — superseded by the
   `@freegamestore/games` SDK hook/component (`credentials:'include'`, auth'd submit).
-- MED/LOW: ~~`games/tetris` imports `@freeappstore/quality`~~ (removed — was the only
-  cross-store dep in the fleet); ~~compliance whitelists `freeappstore.online`~~ (removed
-  from `no-external-fetch` allowlist, compliance `0.8.3`; gate adoption needs a deliberate
-  fgs-cli republish + game-ci pin bump); no test/typecheck gate on host/auth/mcp; publisher
-  tracks `web/dist` + orphaned `.deploy/`; `fgs doctor` reads `~/.fas`; toolchain drift.
+- MED/LOW — mostly CLEARED 2026-07-04:
+  - ~~`games/tetris` imports `@freeappstore/quality`~~ removed (only cross-store dep in the fleet).
+  - ~~compliance whitelists `freeappstore.online`~~ removed from `no-external-fetch` allowlist
+    (compliance `0.8.3`); gate adoption needs a deliberate fgs-cli republish + game-ci pin bump.
+  - ~~no test/typecheck gate on host/auth/mcp~~ gated: host runs typecheck+tests (also FIXED
+    host's missing `tsconfig.json` — its `typecheck` was a no-op that errored, source never
+    type-checked), auth gates on tests, mcp gates on typecheck. All three CI deploys verified green.
+  - ~~publisher tracks `web/dist` + orphaned `.deploy/`~~ untracked web/dist (CI rebuilds) + deleted `.deploy/`.
+  - ~~`fgs doctor` reads `~/.fas`~~ fixed → `~/.fgs` (doctor + logout; cli `0.2.4`).
+  - STILL OPEN: "toolchain drift" (vague — needs definition before action).
   NOTE: the agent's `apps`/`freeappstore` config, `getConfig` apps-fallback, and
   `freeappstore-agent` pkg name are **intentional vendored dual-store code** (tested,
   mirrors the FAS agent for easy ports) — NOT bugs. Runtime always sets `STORE=games`.
