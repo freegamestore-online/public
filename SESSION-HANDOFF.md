@@ -69,10 +69,14 @@ Clean cut: archive each standalone repo after its monorepo deploy verifies.
   pre-SDK `leaderboard/client/{useLeaderboard.ts,Leaderboard.tsx}` (dead workers.dev URL
   + anonymous-submit model the Worker now 401s) were deleted — superseded by the
   `@freegamestore/games` SDK hook/component (`credentials:'include'`, auth'd submit).
-- MED/LOW: `games/tetris` imports `@freeappstore/quality`; no test/typecheck gate on
-  host/auth/mcp; publisher tracks `web/dist` + orphaned `.deploy/`; compliance whitelists
-  `freeappstore.online`; agent FAS fallback + `freeappstore-agent` pkg name; `fgs doctor`
-  reads `~/.fas`; toolchain drift.
+- MED/LOW: ~~`games/tetris` imports `@freeappstore/quality`~~ (removed — was the only
+  cross-store dep in the fleet); ~~compliance whitelists `freeappstore.online`~~ (removed
+  from `no-external-fetch` allowlist, compliance `0.8.3`; gate adoption needs a deliberate
+  fgs-cli republish + game-ci pin bump); no test/typecheck gate on host/auth/mcp; publisher
+  tracks `web/dist` + orphaned `.deploy/`; `fgs doctor` reads `~/.fas`; toolchain drift.
+  NOTE: the agent's `apps`/`freeappstore` config, `getConfig` apps-fallback, and
+  `freeappstore-agent` pkg name are **intentional vendored dual-store code** (tested,
+  mirrors the FAS agent for easy ports) — NOT bugs. Runtime always sets `STORE=games`.
 - FGS↔FAS coupling to cut during consolidation: host/admin bind FAS's `fas` D1.
 
 ## Repo state caveats (IMPORTANT)
