@@ -28,16 +28,21 @@ jobs:
 
       - name: Leaderboard API
         run: |
-          STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://freegamestore-leaderboard.serge-the-dev.workers.dev/api/leaderboard/tetris?limit=5')
+          # Custom domain — the freegamestore-leaderboard.*.workers.dev subdomain
+          # is disabled (worker serves only via the leaderboard.freegamestore.online
+          # route), so the old workers.dev URL 404s. Hit the real route.
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' 'https://leaderboard.freegamestore.online/api/leaderboard/tetris?limit=5')
           echo "leaderboard/api/leaderboard/tetris → $STATUS"
           [ "$STATUS" = "200" ] || exit 1
 
       - name: Sample games (spot check 5)
         run: |
+          # Path B host serves R2 objects with range support, so a plain GET comes
+          # back 206 (Partial Content) — a success, not a failure. Accept 200 or 206.
           for game in tetris chess snake pong wordle; do
             STATUS=$(curl -s -o /dev/null -w '%{http_code}' "https://${game}.freegamestore.online")
             echo "${game}.freegamestore.online → $STATUS"
-            [ "$STATUS" = "200" ] || exit 1
+            [ "$STATUS" = "200" ] || [ "$STATUS" = "206" ] || exit 1
           done
 
       - name: Agent service
