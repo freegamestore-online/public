@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { readConfig, CONFIG_FILE } from '../lib/config.js';
+import { CONFIG_FILE, readConfig } from '../lib/config.js';
 
 export type DoctorCheckStatus = 'pass' | 'fail' | 'warn';
 
