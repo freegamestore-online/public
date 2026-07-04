@@ -59,9 +59,11 @@ Clean cut: archive each standalone repo after its monorepo deploy verifies.
   committed, CI added, but the **private** `leaderboard` repo lacks org-secret access
   (org secret covers PUBLIC repos only). Interim fix: make the repo **public** (matches
   siblings) → its `deploy.yml` ships it. Durable fix: consolidation Phase 1.
-- **`fas-apps` bucket (HIGH):** generated game `deploy.yml` + templates + games
-  {dragontap,quickdice,toetap} + `fgs-cli/.../publish-workflow.ts:48` upload to
-  `s3://fas-apps` but host serves `fgs-games` → games never appear. Fix bucket → `fgs-games`.
+- ~~**`fas-apps` bucket (HIGH):**~~ RESOLVED. `fgs-cli` generator fixed earlier
+  (`3d0306f`); games {dragontap,quickdice,toetap} deploy.yml swapped to
+  `s3://fgs-games/games/<repo>/` (were uploading to fas-apps → never served) and
+  the stale header comment in templates {3d,cards,grid} corrected. Host serves
+  `fgs-games` (host/wrangler.toml). All game/template deploy.yml now consistent.
 - ~~**Personal `workers.dev` (MED/HIGH):**~~ RESOLVED. `freegamestore/leaderboard.html`
   + `prod-smoke.yml` re-pointed to `leaderboard.freegamestore.online`; the orphaned
   pre-SDK `leaderboard/client/{useLeaderboard.ts,Leaderboard.tsx}` (dead workers.dev URL
