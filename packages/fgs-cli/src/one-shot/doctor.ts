@@ -1,8 +1,6 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { readConfig } from '../lib/config.js';
+import { readConfig, CONFIG_FILE } from '../lib/config.js';
 
 export type DoctorCheckStatus = 'pass' | 'fail' | 'warn';
 
@@ -53,7 +51,7 @@ async function checkBinary(name: string): Promise<DoctorCheckResult> {
 }
 
 async function checkConfigFile(): Promise<DoctorCheckResult> {
-  const path = join(homedir(), '.fas', 'config.json');
+  const path = CONFIG_FILE;
   try {
     const raw = await readFile(path, 'utf8');
     JSON.parse(raw);
@@ -61,7 +59,7 @@ async function checkConfigFile(): Promise<DoctorCheckResult> {
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
-      return { name: 'Config file', status: 'warn', detail: 'No config yet — run `fas login`.' };
+      return { name: 'Config file', status: 'warn', detail: 'No config yet — run `fgs login`.' };
     }
     return {
       name: 'Config file',

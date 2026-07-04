@@ -3,7 +3,10 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const CONFIG_DIR = join(homedir(), '.fgs');
-const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
+/** Canonical FGS CLI config path (`~/.fgs/config.json`). Exported so `doctor`
+ *  and `logout` reference the SAME location `login`/`readConfig` write, rather
+ *  than hardcoding it (they had drifted to the FAS `~/.fas` path). */
+export const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 export interface FgsConfig {
   apiBase: string;
