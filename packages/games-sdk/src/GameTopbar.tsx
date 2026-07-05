@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSound } from './SoundContext.js';
 
 export interface GameTopbarStat {
@@ -45,6 +45,14 @@ export interface GameTopbarProps {
   rules?: ReactNode;
 
   /**
+   * Optional extra content for the About panel (credits, a one-line pitch,
+   * links). The About (i) button is ALWAYS shown regardless — it also displays
+   * the game's deployed version + timestamp, read from `/version.json`. Pass
+   * this only to add your own content above that.
+   */
+  about?: ReactNode;
+
+  /**
    * For interactive/real-time games (Tetris, Snake, etc.). When provided,
    * the SDK renders standard play/pause + restart icon buttons in the topbar.
    * `paused` controls the icon state (play vs pause).
@@ -76,11 +84,13 @@ export function GameTopbar({
   stats,
   actions,
   rules,
+  about,
   onPlayPause,
   paused,
   onRestart,
 }: GameTopbarProps): React.JSX.Element {
   const [showRules, setShowRules] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const sound = useSound();
 
   const resolvedStats: GameTopbarStat[] =
@@ -284,6 +294,41 @@ export function GameTopbar({
               </svg>
             </button>
           )}
+          {/* About — always present. Opens version + timestamp + credits. */}
+          <button
+            data-fgs-tb-btn
+            onClick={() => setShowAbout(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              minWidth: '2.75rem',
+              minHeight: '2.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--muted, #999)',
+              lineHeight: 1,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            aria-label="About this game"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="8" cy="8" r="6.5" />
+              <path d="M8 7.25v3.5" />
+              <path d="M8 5.15v0" />
+            </svg>
+          </button>
           {/* Sound toggle — always present, muted by default */}
           <button
             data-fgs-tb-btn
@@ -347,15 +392,147 @@ export function GameTopbar({
       {showRules && rules !== undefined && (
         <RulesOverlay onClose={() => setShowRules(false)}>{rules}</RulesOverlay>
       )}
+
+      {showAbout && (
+        <AboutOverlay title={title} extra={about} onClose={() => setShowAbout(false)} />
+      )}
     </>
+  );
+}
+
+interface VersionInfo {
+  version?: string;
+  deployedAt?: string;
+  source?: string;
+}
+
+/** Compact "3 hours ago" style relative time — no dependency, no locale data. */
+function relativeTime(iso: string): string {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return '';
+  const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+  const units: [number, string][] = [
+    [60, 'second'],
+    [60, 'minute'],
+    [24, 'hour'],
+    [30, 'day'],
+    [12, 'month'],
+    [Number.POSITIVE_INFINITY, 'year'],
+  ];
+  let n = secs;
+  let unit = 'second';
+  for (const [div, name] of units) {
+    if (n < div) {
+      unit = name;
+      break;
+    }
+    n = Math.floor(n / div);
+    unit = name;
+  }
+  if (secs < 45) return 'just now';
+  return `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+}
+
+/**
+ * The About panel: the game's deployed version + when it shipped (read from
+ * `/version.json`, which every FreeGameStore game serves), plus any custom
+ * `extra` content and the store link. Version fetch is lazy — only when opened —
+ * and fails silently (a local `pnpm dev` build has no version.json).
+ */
+function AboutOverlay({
+  title,
+  extra,
+  onClose,
+}: {
+  title?: string | undefined;
+  extra?: ReactNode | undefined;
+  onClose: () => void;
+}): React.JSX.Element {
+  const [info, setInfo] = useState<VersionInfo | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/version.json', { cache: 'no-cache' })
+      .then((r) => (r.ok ? (r.json() as Promise<VersionInfo>) : Promise.reject(new Error(String(r.status)))))
+      .then((d) => {
+        if (!cancelled) setInfo(d);
+      })
+      .catch(() => {
+        /* dev build / unreachable — show "development build" below */
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const version = (info?.version ?? '').slice(0, 7);
+  const deployedAt = info?.deployedAt;
+
+  return (
+    <RulesOverlay title="About" onClose={onClose}>
+      {title !== undefined && (
+        <h1
+          style={{
+            fontFamily: '"Fraunces", Georgia, serif',
+            fontWeight: 700,
+            fontSize: '1.5rem',
+            margin: '0 0 0.75rem',
+          }}
+        >
+          {title}
+        </h1>
+      )}
+
+      {extra !== undefined && <div style={{ marginBottom: '1rem' }}>{extra}</div>}
+
+      <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.35rem 1rem', fontSize: '0.85rem' }}>
+        <dt style={{ color: 'var(--muted, #999)' }}>Version</dt>
+        <dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>
+          {version ? (
+            <code style={{ fontFamily: 'monospace' }}>{version}</code>
+          ) : loaded ? (
+            'development build'
+          ) : (
+            '…'
+          )}
+        </dd>
+        {deployedAt && (
+          <>
+            <dt style={{ color: 'var(--muted, #999)' }}>Deployed</dt>
+            <dd style={{ margin: 0 }} title={new Date(deployedAt).toLocaleString()}>
+              {relativeTime(deployedAt)}
+            </dd>
+          </>
+        )}
+      </dl>
+
+      <p style={{ marginTop: '1.25rem', fontSize: '0.8rem', color: 'var(--muted, #999)' }}>
+        A free game on{' '}
+        <a
+          href="https://freegamestore.online"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'var(--accent, #10b981)', textDecoration: 'none' }}
+        >
+          FreeGameStore
+        </a>
+        .
+      </p>
+    </RulesOverlay>
   );
 }
 
 function RulesOverlay({
   children,
+  title = 'How to Play',
   onClose,
 }: {
   children: ReactNode;
+  title?: string;
   onClose: () => void;
 }): React.JSX.Element {
   return (
@@ -388,7 +565,7 @@ function RulesOverlay({
             fontSize: '0.9rem',
           }}
         >
-          How to Play
+          {title}
         </span>
         <button
           data-fgs-tb-btn
@@ -406,7 +583,7 @@ function RulesOverlay({
             justifyContent: 'center',
             WebkitTapHighlightColor: 'transparent',
           }}
-          aria-label="Close rules"
+          aria-label="Close"
         >
           &times;
         </button>
