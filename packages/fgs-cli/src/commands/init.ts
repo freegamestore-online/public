@@ -15,6 +15,8 @@ const TEMPLATES = {
   phaser: 'freegamestore-online/template-game-phaser',
   pixi: 'freegamestore-online/template-game-pixi',
   babylon: 'freegamestore-online/template-game-babylon',
+  excalibur: 'freegamestore-online/template-game-excalibur',
+  littlejs: 'freegamestore-online/template-game-littlejs',
 } as const;
 
 type TemplateName = keyof typeof TEMPLATES;

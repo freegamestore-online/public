@@ -32,7 +32,7 @@ Live in 30 seconds at `https://asteroids.freegamestore.online`.
 | `fgs logout` | Clear the cached session. |
 | `fgs whoami` | Print the currently signed-in GitHub login. |
 | `fgs doctor` | Health check — Node, git, pnpm, config, signed-in state, API reachability. |
-| `fgs init <game-id> [--template canvas\|grid\|3d\|cards\|phaser\|kaplay\|pixi\|babylon]` | Scaffold a new game. Default is `canvas` (2D arcade). |
+| `fgs init <game-id> [--template canvas\|grid\|3d\|cards\|phaser\|kaplay\|pixi\|babylon\|excalibur\|littlejs]` | Scaffold a new game. Default is `canvas` (2D arcade). |
 | `fgs check [--dir <path>]` | Run compliance checks. Exits non-zero on hard failures. |
 | `fgs publish` | Provisions repo + hosting route + storefront entry. Auto-runs `fgs check` first. |
 | `fgs list` (alias `fgs ls`) | List your published games. |

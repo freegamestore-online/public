@@ -19,16 +19,23 @@ export async function checkLicenseMit(source: FileSource): Promise<CheckResult> 
     'license.md',
     'license.txt',
   ];
+  let foundButNotMit: string | null = null;
   for (const path of candidates) {
     const content = await source.read(path);
     if (content === null) continue;
     if (/\bmit\b/i.test(content)) {
       return { name: 'MIT License', status: 'pass', detail: path };
     }
+    // Don't fail on the first non-MIT candidate — a repo may have e.g. a
+    // non-MIT LICENSE alongside an MIT LICENSE.md. Keep scanning; only report
+    // the "exists but not MIT" failure if no candidate matches.
+    foundButNotMit ??= path;
+  }
+  if (foundButNotMit) {
     return {
       name: 'MIT License',
       status: 'fail',
-      detail: `${path} exists but does not mention MIT`,
+      detail: `${foundButNotMit} exists but does not mention MIT`,
       suggestions: [
         'Replace LICENSE with the standard MIT license text from https://opensource.org/license/mit',
       ],
