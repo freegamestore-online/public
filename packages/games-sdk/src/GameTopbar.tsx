@@ -454,7 +454,9 @@ function AboutOverlay({
   useEffect(() => {
     let cancelled = false;
     fetch('/version.json', { cache: 'no-cache' })
-      .then((r) => (r.ok ? (r.json() as Promise<VersionInfo>) : Promise.reject(new Error(String(r.status)))))
+      .then((r) =>
+        r.ok ? (r.json() as Promise<VersionInfo>) : Promise.reject(new Error(String(r.status))),
+      )
       .then((d) => {
         if (!cancelled) setInfo(d);
       })
@@ -489,7 +491,15 @@ function AboutOverlay({
 
       {extra !== undefined && <div style={{ marginBottom: '1rem' }}>{extra}</div>}
 
-      <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '0.35rem 1rem', fontSize: '0.85rem' }}>
+      <dl
+        style={{
+          margin: 0,
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr',
+          gap: '0.35rem 1rem',
+          fontSize: '0.85rem',
+        }}
+      >
         <dt style={{ color: 'var(--muted, #999)' }}>Version</dt>
         <dd style={{ margin: 0, fontVariantNumeric: 'tabular-nums' }}>
           {version ? (
