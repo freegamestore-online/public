@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fsFileSource } from '../lib/file-source.js';
+import { fsFileSource } from '../lib/fs-file-source.js';
 import { checkClaudeMdSlim } from './claude-md-slim.js';
 
 const SLIM_CLAUDE_MD = `# myapp

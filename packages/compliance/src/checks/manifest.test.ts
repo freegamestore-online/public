@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fsFileSource } from '../lib/file-source.js';
+import { fsFileSource } from '../lib/fs-file-source.js';
 import { checkManifest } from './manifest.js';
 
 let dir: string;

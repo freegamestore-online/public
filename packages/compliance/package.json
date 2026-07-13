@@ -1,7 +1,7 @@
 {
   "name": "@freegamestore/compliance",
-  "version": "0.8.3",
-  "description": "Compliance checks for games published on freegamestore.online — used by the CLI for local feedback and by CI for gating.",
+  "version": "0.9.0",
+  "description": "Compliance checks for games published on freegamestore.online \u2014 used by the CLI for local feedback and by CI for gating.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js"
     }
   },
   "homepage": "https://github.com/freegamestore-online/platform#readme",

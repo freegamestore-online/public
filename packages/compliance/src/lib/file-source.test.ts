@@ -6,7 +6,8 @@ import { checkBrandFonts } from '../checks/brand-fonts.js';
 import { checkNoTracking } from '../checks/no-tracking.js';
 import { checkUnsafeVh } from '../checks/unsafe-vh.js';
 import { runChecksFromFiles } from '../index.js';
-import { fsFileSource, mapFileSource } from './file-source.js';
+import { mapFileSource } from './file-source.js';
+import { fsFileSource } from './fs-file-source.js';
 
 describe('fsFileSource', () => {
   let dir: string;

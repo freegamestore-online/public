@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { fsFileSource } from '../lib/file-source.js';
+import { fsFileSource } from '../lib/fs-file-source.js';
 import { checkNoBrandOverrides, scanContent } from './no-brand-overrides.js';
 
 async function fixture(files: Record<string, string>): Promise<string> {

@@ -1,3 +1,13 @@
+/**
+ * The full check battery, run against any FileSource. Node-free: this
+ * module imports only the check functions (which read through the
+ * FileSource abstraction) and the Map adapter, so it — and the Worker
+ * entry that re-exports it — bundle cleanly for Cloudflare Workers.
+ *
+ * The on-disk front door `runChecks(repoDir)` lives in index.ts, where
+ * pulling in fsFileSource (node:fs) is fine.
+ */
+
 import { checkAudioMuteRespect } from './checks/audio-mute-respect.js';
 import { checkBrandFonts } from './checks/brand-fonts.js';
 import { checkBrandTokens } from './checks/brand-tokens.js';
@@ -37,80 +47,61 @@ import { checkUsesGameSdk } from './checks/uses-game-sdk.js';
 import { checkUsesLocalStorage } from './checks/uses-localstorage.js';
 import { checkViewportSupport } from './checks/viewport-support.js';
 import { type FileSource, mapFileSource } from './lib/file-source.js';
-import { fsFileSource } from './lib/fs-file-source.js';
-import { isGameProject } from './lib/project-type.js';
-import { runChecksFromFiles, runChecksOn } from './run-checks.js';
 import type { CheckResult } from './types.js';
 
-export type { FileSource } from './lib/file-source.js';
-export type { LiveAuditInput, LiveAuditReport } from './live/index.js';
-// Live-URL audit (used by the compliance audit Worker; runs in
-// browser/Workers env, no filesystem). Separate export path so callers
-// don't accidentally pull node:fs in via the file-walking checks.
-export {
-  auditLive,
-  checkBrandFontsLive,
-  checkBundleSizeLive,
-  checkManifestLive,
-  checkNoTrackingLive,
-  checkUnsafeVhLive,
-} from './live/index.js';
-export type { CheckResult, CheckStatus } from './types.js';
-// Check battery + the Map front door live in run-checks.ts (node-free,
-// also re-exported from ./worker for Workers). Re-exported here so
-// existing CLI/back-end importers keep their single import site.
-export {
-  checkAudioMuteRespect,
-  checkBrandFonts,
-  checkBrandTokens,
-  checkBundleSize,
-  checkClaudeMdSlim,
-  checkDarkMode,
-  checkDeployWorkflow,
-  checkGameNaming,
-  checkGitignoreComplete,
-  checkHtmlMeta,
-  checkLicenseMit,
-  checkManifest,
-  checkMaskableIcon,
-  checkNoAnyTypes,
-  checkNoBrandOverrides,
-  checkNoConsoleLog,
-  checkNoCookies,
-  checkNoEnvProduction,
-  checkNoExcessiveInlineStyles,
-  checkNoExternalFetch,
-  checkNoExternalScripts,
-  checkNoHardcodedColors,
-  checkNoPaymentSdk,
-  checkNoPlaceholders,
-  checkNoScroll,
-  checkNoTracking,
-  checkPwaIcons,
-  checkPwaMeta,
-  checkPwaOffline,
-  checkReactStrictMode,
-  checkSdkVersion,
-  checkStoreLink,
-  checkTechVersions,
-  checkTypescriptStrict,
-  checkUnsafeVh,
-  checkUsesGameSdk,
-  checkUsesLocalStorage,
-  checkViewportSupport,
-  fsFileSource,
-  isGameProject,
-  mapFileSource,
-  runChecksFromFiles,
-  runChecksOn,
-};
-
 /**
- * On-disk front door — CLI / CI. Reads from a real directory via
- * fsFileSource (node:fs). The Map front door (`runChecksFromFiles`)
- * shares the same check battery through the FileSource abstraction, so
- * rules stay in one place regardless of where the files come from.
+ * VibeCode agent front door — reads from the in-memory Map the agent's
+ * session DO holds. No filesystem access, so it's safe in a Worker.
  */
-export async function runChecks(repoDir: string): Promise<CheckResult[]> {
-  return runChecksOn(fsFileSource(repoDir));
+export async function runChecksFromFiles(files: Map<string, string>): Promise<CheckResult[]> {
+  return runChecksOn(mapFileSource(files));
+}
+
+export async function runChecksOn(source: FileSource): Promise<CheckResult[]> {
+  return Promise.all([
+    // Platform rules (hard fail)
+    checkLicenseMit(source),
+    checkNoEnvProduction(source),
+    checkNoPlaceholders(source),
+    checkNoTracking(source),
+    checkNoPaymentSdk(source),
+    checkNoCookies(source),
+    checkNoExternalScripts(source),
+    checkNoExternalFetch(source),
+    // Brand & design
+    checkAudioMuteRespect(source),
+    checkBrandFonts(source),
+    checkBrandTokens(source),
+    checkNoBrandOverrides(source),
+    checkDarkMode(source),
+    // Layout & viewport
+    checkNoScroll(source),
+    checkViewportSupport(source),
+    checkUnsafeVh(source),
+    // HTML & PWA
+    checkHtmlMeta(source),
+    checkPwaMeta(source),
+    checkPwaOffline(source),
+    checkManifest(source),
+    checkMaskableIcon(source),
+    checkPwaIcons(source),
+    // SDK & code quality
+    checkUsesGameSdk(source),
+    checkTypescriptStrict(source),
+    checkStoreLink(source),
+    checkBundleSize(source),
+    checkClaudeMdSlim(source),
+    // Warnings (guidelines, not gates)
+    checkSdkVersion(source),
+    checkTechVersions(source),
+    checkNoAnyTypes(source),
+    checkNoConsoleLog(source),
+    checkUsesLocalStorage(source),
+    checkGameNaming(source),
+    checkNoHardcodedColors(source),
+    checkNoExcessiveInlineStyles(source),
+    checkDeployWorkflow(source),
+    checkGitignoreComplete(source),
+    checkReactStrictMode(source),
+  ]);
 }
