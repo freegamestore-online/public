@@ -92,6 +92,13 @@ export const publishCommand = new Command('publish')
         }
       }
 
+      // Refuse a cross-store project up front (FAS app published via fgs publish).
+      const storeErr = await assertFreeGameStoreProject(process.cwd());
+      if (storeErr) {
+        process.stdout.write(`\n✗ ${storeErr}\n`);
+        process.exit(1);
+      }
+
       // Run compliance checks BEFORE prompts so a doomed submission fails
       // fast. Hard fails block; warnings allow through. Bypass with
       // --skip-checks if you really need to (admin review will still
@@ -391,6 +398,33 @@ export function buildSubmissionUrl(input: SubmissionInput): string {
   if (input.repo) url.searchParams.set('repo', input.repo);
   if (input.demo) url.searchParams.set('demo', input.demo);
   return url.toString();
+}
+
+/** FAS and FGS are SEPARATE stores — separate R2 buckets (fas-apps vs fgs-games),
+ *  credentials, host workers and domains. A project scaffolded for FreeAppStore
+ *  (uses @freeappstore/sdk, or a deploy.yml pinned to the fas-apps bucket)
+ *  cannot deploy from FreeGameStore: its push would fail opaquely at "Upload to
+ *  R2" with AccessDenied (the FGS token has no access to fas-apps, and vice
+ *  versa). Catch the mismatch HERE, before provisioning, with a clear message. */
+export async function assertFreeGameStoreProject(cwd: string): Promise<string | null> {
+  const read = async (rel: string): Promise<string> => {
+    try {
+      return await readFile(join(cwd, rel), 'utf8');
+    } catch {
+      return '';
+    }
+  };
+  const haystack =
+    (await read('web/package.json')) +
+    '\n' +
+    (await read('package.json')) +
+    '\n' +
+    (await read('.github/workflows/deploy.yml'));
+  // FreeAppStore markers — the SDK dependency or the fas-apps R2 target.
+  if (/@freeappstore\/sdk|fas-apps|freeappstore-host/.test(haystack)) {
+    return 'This looks like a FreeAppStore app (it uses @freeappstore/sdk or the fas-apps bucket). FreeAppStore and FreeGameStore are separate stores — publish it with `fas publish` instead. Cross-publishing fails at R2 upload (AccessDenied) because each store\'s credentials only reach its own bucket.';
+  }
+  return null;
 }
 
 async function detectAppName(): Promise<string | null> {
