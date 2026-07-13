@@ -422,7 +422,7 @@ export async function assertFreeGameStoreProject(cwd: string): Promise<string | 
     (await read('.github/workflows/deploy.yml'));
   // FreeAppStore markers — the SDK dependency or the fas-apps R2 target.
   if (/@freeappstore\/sdk|fas-apps|freeappstore-host/.test(haystack)) {
-    return 'This looks like a FreeAppStore app (it uses @freeappstore/sdk or the fas-apps bucket). FreeAppStore and FreeGameStore are separate stores — publish it with `fas publish` instead. Cross-publishing fails at R2 upload (AccessDenied) because each store\'s credentials only reach its own bucket.';
+    return "This looks like a FreeAppStore app (it uses @freeappstore/sdk or the fas-apps bucket). FreeAppStore and FreeGameStore are separate stores — publish it with `fas publish` instead. Cross-publishing fails at R2 upload (AccessDenied) because each store's credentials only reach its own bucket.";
   }
   return null;
 }
