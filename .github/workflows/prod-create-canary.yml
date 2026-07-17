@@ -1,0 +1,33 @@
+name: Prod create canary
+
+# Runs the real creator-facing production path:
+# console /api/create -> admin /api/provision -> GitHub repo from template ->
+# registry + host route -> first deploy -> live game URL -> cleanup.
+#
+# Required secret:
+#   FGS_E2E_GITHUB_TOKEN: a low-privilege canary creator GitHub token. The auth
+#   worker exchanges it for a fresh fgs_token at run time.
+
+on:
+  schedule:
+    - cron: '17 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  create-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Create and clean up a production test game
+        run: node scripts/prod-create-canary.mjs
+        env:
+          FGS_E2E_GITHUB_TOKEN: ${{ secrets.FGS_E2E_GITHUB_TOKEN }}
