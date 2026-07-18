@@ -63,6 +63,12 @@ function canaryId() {
   return `e2e-create-${stamp}-${rand}-test`;
 }
 
+function assertSafeCanaryId(id) {
+  if (!/^e2e-create-[a-z0-9-]+-test$/.test(id)) {
+    fail(`unsafe canary id "${id}"; FGS_E2E_GAME_ID must match e2e-create-*-test`);
+  }
+}
+
 async function fetchText(url, init = {}, timeoutMs = 60_000) {
   const res = await fetch(url, {
     ...init,
@@ -218,6 +224,7 @@ async function main() {
 
   await verifyToken(token);
   const id = process.env.FGS_E2E_GAME_ID || canaryId();
+  assertSafeCanaryId(id);
   console.log(`canary id: ${id}`);
 
   let attemptedCreate = false;
