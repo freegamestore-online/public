@@ -375,14 +375,13 @@ async function waitForHostGone(id) {
 }
 
 async function verifyHiddenFromStore(id) {
-  const { res, text } = await fetchText(`${STORE_ORIGIN}/registry.json`, {}, 30_000);
-  if (!res.ok) {
-    console.warn(
-      `warning: could not verify public registry (${res.status}): ${text.slice(0, 200)}`,
-    );
-    return;
-  }
-  const registry = parseJson(text, 'store registry');
+  const { data: registry } = await expectJson(
+    'store registry fixture exclusion',
+    `${STORE_ORIGIN}/registry.json`,
+    {},
+    200,
+    30_000,
+  );
   const visible = Array.isArray(registry.games) && registry.games.some((g) => g?.id === id);
   if (visible) {
     fail(`${id} is visible in the public store registry; -test fixture exclusion is not working`);
@@ -490,6 +489,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(`prod create canary failed: ${e?.message || e}`);
+  console.error(`prod platform e2e failed: ${e?.message || e}`);
   process.exit(1);
 });
