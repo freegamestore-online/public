@@ -23,13 +23,21 @@ pnpm typecheck
 `Prod platform e2e` runs daily and manually from GitHub Actions. It checks the
 live production surfaces that must work for creators: storefront, console,
 auth gates, console APIs, agent health/session/key endpoints, leaderboard,
-sample hosted games, and the full real create path.
+sample hosted games, metadata editing, creator deletion, and the full real
+create path.
 
 The mutating portion creates a real hidden `*-test` game through
 `console.freegamestore.online/api/create`, verifies the GitHub repo is public,
 waits for the game host to serve, verifies the fixture is hidden from the public
 store registry, then deletes it through the owner-checked admin API and verifies
 cleanup.
+
+`Prod browser e2e` also runs daily and manually. It drives the real production
+console in Chromium: opens Studio, clicks New Game, fills the create form,
+submits it, verifies the app navigates to `/create/<id>`, verifies the first
+prompt is attempted automatically, opens the live hosted game, and cleans up.
+The browser test blocks the agent chat request so it proves initial-prompt
+injection without spending model quota.
 
 Required repo secret:
 
@@ -39,6 +47,14 @@ gh secret set FGS_E2E_GITHUB_TOKEN --repo freegamestore-online/public
 
 Use a low-privilege canary creator GitHub token. The auth worker exchanges it for
 a fresh `fgs_token` at run time.
+
+Local commands:
+
+```bash
+pnpm test:prod:e2e       # API/platform canary
+pnpm test:prod:browser   # Chromium UI canary
+FGS_E2E_HEADED=1 pnpm test:prod:browser
+```
 
 ## Publishing
 
