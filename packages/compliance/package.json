@@ -16,14 +16,14 @@
       "import": "./dist/worker.js"
     }
   },
-  "homepage": "https://github.com/freegamestore-online/platform#readme",
+  "homepage": "https://github.com/freegamestore-online/public#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/freegamestore-online/platform.git",
+    "url": "git+https://github.com/freegamestore-online/public.git",
     "directory": "packages/compliance"
   },
   "bugs": {
-    "url": "https://github.com/freegamestore-online/platform/issues"
+    "url": "https://github.com/freegamestore-online/public/issues"
   },
   "keywords": [
     "freegamestore",

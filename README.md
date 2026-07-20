@@ -1,6 +1,6 @@
-# @freegamestore/platform
+# @freegamestore/public
 
-Platform monorepo for [FreeGameStore](https://freegamestore.online) — publishable npm packages for game development and publishing.
+Public creator packages for [FreeGameStore](https://freegamestore.online) — SDK, CLI, and compliance tooling for game development and publishing.
 
 ## Packages
 
@@ -27,7 +27,7 @@ the game host to serve, then deletes it through the owner-checked admin API.
 Required repo secret:
 
 ```bash
-gh secret set FGS_E2E_GITHUB_TOKEN --repo freegamestore-online/platform
+gh secret set FGS_E2E_GITHUB_TOKEN --repo freegamestore-online/public
 ```
 
 Use a low-privilege canary creator GitHub token. The auth worker exchanges it for

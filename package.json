@@ -1,10 +1,10 @@
 {
-  "name": "@freegamestore/platform",
+  "name": "@freegamestore/public",
   "private": true,
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/freegamestore-online/platform.git"
+    "url": "git+https://github.com/freegamestore-online/public.git"
   },
   "license": "MIT",
   "engines": {

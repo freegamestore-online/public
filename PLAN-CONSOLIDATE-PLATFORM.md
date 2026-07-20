@@ -1,6 +1,8 @@
 # Plan: consolidate FGS platform tools into one `platform` monorepo
 
-Status: proposed (not started)
+Status: superseded by the 2026-07 private/public split. The public creator-package
+repo is now `freegamestore-online/public`; the private operational monorepo is
+`freegamestore-online/platform`.
 Author: drafted 2026-06-30
 Model: the FAS consolidation (`fas/platform/workers/` + `PLAN-CONSOLIDATE-WORKERS.md`,
 done 2026-06-02). This plan mirrors that proven shape for FGS and **fixes the one
