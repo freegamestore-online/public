@@ -15,6 +15,7 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
+    "test:prod:e2e": "node scripts/prod-create-canary.mjs",
     "lint": "biome check .",
     "format": "biome format --write ."
   },

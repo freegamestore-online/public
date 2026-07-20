@@ -1,8 +1,10 @@
-name: Prod create canary
+name: Prod platform e2e
 
-# Runs the real creator-facing production path:
+# Runs the real creator-facing production path and surrounding platform checks:
 # console /api/create -> admin /api/provision -> GitHub repo from template ->
 # registry + host route -> first deploy -> live game URL -> cleanup.
+# Also covers auth gates, console API reads, agent health/session/key reads,
+# leaderboard, sample hosted games, repo visibility, and cleanup effects.
 #
 # Required secret:
 #   FGS_E2E_GITHUB_TOKEN: a low-privilege canary creator GitHub token. The auth
@@ -17,7 +19,7 @@ permissions:
   contents: read
 
 jobs:
-  create-canary:
+  platform-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,7 +29,7 @@ jobs:
         with:
           node-version: 24
 
-      - name: Create and clean up a production test game
+      - name: Run production platform e2e
         run: node scripts/prod-create-canary.mjs
         env:
           FGS_E2E_GITHUB_TOKEN: ${{ secrets.FGS_E2E_GITHUB_TOKEN }}

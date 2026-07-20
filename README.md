@@ -18,11 +18,18 @@ pnpm build
 pnpm typecheck
 ```
 
-## Production Canaries
+## Production E2E
 
-`Prod create canary` runs daily and manually from GitHub Actions. It creates a real
-hidden `*-test` game through `console.freegamestore.online/api/create`, waits for
-the game host to serve, then deletes it through the owner-checked admin API.
+`Prod platform e2e` runs daily and manually from GitHub Actions. It checks the
+live production surfaces that must work for creators: storefront, console,
+auth gates, console APIs, agent health/session/key endpoints, leaderboard,
+sample hosted games, and the full real create path.
+
+The mutating portion creates a real hidden `*-test` game through
+`console.freegamestore.online/api/create`, verifies the GitHub repo is public,
+waits for the game host to serve, verifies the fixture is hidden from the public
+store registry, then deletes it through the owner-checked admin API and verifies
+cleanup.
 
 Required repo secret:
 
