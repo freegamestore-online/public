@@ -36,6 +36,7 @@ const SAMPLE_GAME_IDS = (process.env.FGS_E2E_SAMPLE_GAMES || 'tetris,chess,snake
   .filter(Boolean);
 const AGENT_ORIGIN = process.env.FGS_AGENT_ORIGIN || `https://agent.${DOMAIN}`;
 const LEADERBOARD_ORIGIN = process.env.FGS_LEADERBOARD_ORIGIN || `https://leaderboard.${DOMAIN}`;
+const MCP_ORIGIN = process.env.FGS_MCP_ORIGIN || `https://mcp.${DOMAIN}`;
 const PUBLISH_ORIGIN = process.env.FGS_PUBLISH_ORIGIN || `https://publish.${DOMAIN}`;
 
 function fail(message) {
@@ -175,6 +176,9 @@ async function verifyPublicSurfaces(id) {
     { method: 'DELETE' },
     401,
   );
+  await expectStatus('admin status unauthenticated', `${ADMIN_ORIGIN}/api/status`, {}, 401);
+  await expectStatus('admin errors unauthenticated', `${ADMIN_ORIGIN}/api/errors`, {}, 401);
+  await expectStatus('mcp unauthenticated', `${MCP_ORIGIN}/mcp`, {}, 401);
 
   const catalog = await expectJson(
     'console /api/catalog',
@@ -398,8 +402,44 @@ async function verifyCreatorGame(token, id, expected) {
   );
   const games = data?.creator?.games;
   assert(Array.isArray(games), 'console /api/me creator games is not an array');
-  const found = games.some((g) => g?.id === id);
-  assert(found === expected, `creator game ${id} expected present=${expected}, got ${found}`);
+  const game = games.find((g) => g?.id === id);
+  assert(!!game === expected, `creator game ${id} expected present=${expected}, got ${!!game}`);
+  return game;
+}
+
+async function updateGameMetadata(token, id) {
+  const updates = {
+    name: `Updated Canary ${id}`,
+    description: `Updated by production e2e at ${new Date().toISOString()}`,
+    category: 'arcade',
+    icon: 'U',
+    iconBg: '#dbeafe',
+  };
+  const { data } = await expectJson(
+    'console game metadata patch',
+    `${CONSOLE_ORIGIN}/api/games/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      headers: cookieHeaders(token, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify(updates),
+    },
+    200,
+    60_000,
+  );
+  assert(data.ok === true, `metadata patch did not return ok=true: ${JSON.stringify(data)}`);
+  const game = await verifyCreatorGame(token, id, true);
+  assert(game.name === updates.name, `metadata patch name did not stick: ${game.name}`);
+  assert(
+    game.description === updates.description,
+    `metadata patch description did not stick: ${game.description}`,
+  );
+  assert(
+    game.category === updates.category,
+    `metadata patch category did not stick: ${game.category}`,
+  );
+  assert(game.icon === updates.icon, `metadata patch icon did not stick: ${game.icon}`);
+  assert(game.iconBg === updates.iconBg, `metadata patch iconBg did not stick: ${game.iconBg}`);
+  console.log('console game metadata patch verified');
 }
 
 async function verifyGitHubRepo(id, expected) {
@@ -422,8 +462,8 @@ async function verifyGitHubRepo(id, expected) {
   );
 }
 
-async function cleanup(id, token) {
-  const { res, text } = await fetchText(
+async function adminCleanup(id, token) {
+  return fetchText(
     `${ADMIN_ORIGIN}/api/games/${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
@@ -431,9 +471,32 @@ async function cleanup(id, token) {
     },
     60_000,
   );
+}
+
+async function cleanup(id, token) {
+  let fallbackUsed = false;
+  let { res, text } = await fetchText(
+    `${CONSOLE_ORIGIN}/api/games/${encodeURIComponent(id)}`,
+    {
+      method: 'DELETE',
+      headers: cookieHeaders(token),
+    },
+    60_000,
+  );
+  let consoleData = null;
+  try {
+    consoleData = JSON.parse(text || '{}');
+  } catch {
+    consoleData = { error: text.slice(0, 500) };
+  }
+  if (!res.ok || consoleData?.error) {
+    fallbackUsed = true;
+    console.warn(`cleanup warning: console DELETE returned ${res.status}: ${text.slice(0, 500)}`);
+    ({ res, text } = await adminCleanup(id, token));
+  }
   if (res.status === 404) {
     console.warn(`cleanup warning: ${id} not found`);
-    return;
+    return { ok: false, fallbackUsed };
   }
   let data = null;
   try {
@@ -445,9 +508,12 @@ async function cleanup(id, token) {
     console.warn(
       `cleanup warning: DELETE returned ${res.status}: ${(data?.error || text).slice(0, 500)}`,
     );
-    return;
+    return { ok: false, fallbackUsed };
   }
-  console.log(`cleanup ok: ${id} delisted, route removed, repo archived`);
+  console.log(
+    `cleanup ok: ${id} delisted, route removed, repo archived${fallbackUsed ? ' (admin fallback)' : ''}`,
+  );
+  return { ok: true, fallbackUsed };
 }
 
 async function main() {
@@ -465,27 +531,39 @@ async function main() {
   await verifyPublicSurfaces(id);
   await verifyAuthenticatedSurfaces(token, id);
 
-  let attemptedCreate = false;
   let created = false;
+  let mainError = null;
+  let cleanupResult = null;
   try {
-    attemptedCreate = true;
     await createGame(id, token);
     created = true;
     await expectCheckId(token, id, false, 'new canary id after create');
     await verifyCreatorGame(token, id, true);
+    await updateGameMetadata(token, id);
     await verifyGitHubRepo(id, { archived: false });
     await waitForHost(id);
     await verifyHiddenFromStore(id);
+  } catch (e) {
+    mainError = e;
   } finally {
-    if (attemptedCreate || process.env.FGS_E2E_ALWAYS_CLEANUP === '1') {
-      await cleanup(id, token);
-      if (created) {
+    if (created || process.env.FGS_E2E_ALWAYS_CLEANUP === '1') {
+      cleanupResult = await cleanup(id, token);
+      if (created && !mainError) {
         await verifyCreatorGame(token, id, false);
         await verifyGitHubRepo(id, { archived: true });
         await waitForHostGone(id);
+        assert(
+          cleanupResult?.ok === true,
+          `cleanup did not return ok=true: ${JSON.stringify(cleanupResult)}`,
+        );
+        assert(
+          !cleanupResult.fallbackUsed,
+          'console creator DELETE failed; admin fallback was required',
+        );
       }
     }
   }
+  if (mainError) throw mainError;
 }
 
 main().catch((e) => {
